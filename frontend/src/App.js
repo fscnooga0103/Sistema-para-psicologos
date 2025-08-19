@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Textarea } from "./components/ui/textarea";
 import { Separator } from "./components/ui/separator";
 import { ScrollArea } from "./components/ui/scroll-area";
+import AnamnesisForm from "./components/AnamnesisForm";
 import { 
   Users, 
   UserPlus, 
@@ -30,7 +31,9 @@ import {
   Plus,
   Search,
   Calendar,
-  DollarSign
+  DollarSign,
+  Eye,
+  Edit
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
