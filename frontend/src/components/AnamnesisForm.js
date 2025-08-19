@@ -23,7 +23,7 @@ import {
   MessageSquare,
   Utensils,
   Users,
-  GameController2,
+  Gamepad2,
   GraduationCap,
   HeartHandshake,
   Home,
