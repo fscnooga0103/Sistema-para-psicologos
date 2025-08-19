@@ -264,6 +264,356 @@ class PsychologyPortalAPITester:
 
         return all([success1, success2, success3, success4])
 
+    def test_anamnesis_apis(self):
+        """Test all anamnesis-related APIs"""
+        print("\n" + "="*50)
+        print("🧠 TESTING ANAMNESIS APIs")
+        print("="*50)
+        
+        if not self.patient_id:
+            print("❌ No patient ID available for anamnesis testing")
+            return False
+
+        # Test anamnesis data structure (comprehensive medical form)
+        anamnesis_data = {
+            "general_data": {
+                "patient_name": "Juan Pérez",
+                "birth_date": "2010-05-15",
+                "birth_place": "Lima, Perú",
+                "age_years": 13,
+                "age_months": 8,
+                "education_level": "Secundaria",
+                "informants": ["Madre", "Padre"],
+                "father_data": {
+                    "name": "Carlos Pérez",
+                    "age": "45",
+                    "education": "Universitaria",
+                    "occupation": "Ingeniero"
+                },
+                "mother_data": {
+                    "name": "María González",
+                    "age": "42",
+                    "education": "Universitaria",
+                    "occupation": "Profesora"
+                },
+                "siblings_data": []
+            },
+            "consultation_motive": {
+                "difficulty_presentation": "Dificultades de atención en clase detectadas por la profesora hace 6 meses",
+                "when_where_who": "Se presenta principalmente en el colegio durante las clases",
+                "evolution": "Ha empeorado gradualmente, especialmente en matemáticas",
+                "solutions_attempted": "Refuerzo escolar y cambio de rutina de estudio",
+                "perceived_cause": "Posible déficit de atención, estrés académico",
+                "treatments_received": "Ninguno hasta la fecha",
+                "current_illness": {
+                    "syndrome_time_years": "0",
+                    "syndrome_time_months": "6",
+                    "syndrome_time_days": "0",
+                    "onset_type": "insidioso",
+                    "main_symptoms": "Falta de concentración, distracción fácil, olvidos frecuentes",
+                    "important_stressors": "Cambio de colegio, separación temporal de los padres",
+                    "pharmacological_treatments": "Ninguno"
+                }
+            },
+            "evolutionary_history": {
+                "prenatal": {
+                    "pregnancy_number": "1",
+                    "pregnancy_conditions": "Normal",
+                    "planned_desired": "Sí",
+                    "control_type": "Médico privado",
+                    "diseases_difficulties": "Ninguna",
+                    "medications_xrays": "Vitaminas prenatales",
+                    "alcohol_tobacco_drugs": "No",
+                    "losses": "No"
+                },
+                "perinatal": {
+                    "birth_time": "40 semanas",
+                    "attended_by": "Médico obstetra",
+                    "delivery_type": "Parto natural",
+                    "anesthesia": "Epidural",
+                    "instruments": "No",
+                    "weight_height": "3.2kg, 50cm",
+                    "cry_coloration": "Inmediato, rosado",
+                    "reanimation": "No requerida",
+                    "parents_age": {"father": "32", "mother": "29"}
+                },
+                "postnatal": {
+                    "malformations": "No",
+                    "breastfeeding": "6 meses exclusiva",
+                    "sucking_difficulties": "No",
+                    "postpartum_difficulties": "No"
+                }
+            },
+            "medical_history": {
+                "current_health": "Buena",
+                "main_diseases": "Ninguna significativa",
+                "medications": "Ninguna",
+                "accidents": "Caída menor a los 8 años",
+                "operations": {"performed": "No", "which": "", "why": ""},
+                "exams": {"performed": "Sí", "results": "Exámenes de rutina normales"}
+            },
+            "neuromuscular_development": {
+                "motor_milestones": {
+                    "lift_head": "2 meses",
+                    "sit_without_help": "6 meses",
+                    "crawl": "8 meses",
+                    "stand_without_help": "10 meses",
+                    "walk": "12 meses"
+                },
+                "difficulties": {
+                    "tendency_fall": False,
+                    "tendency_hit": False
+                },
+                "automatic_movements": {
+                    "balancing": "Normal",
+                    "other_movements": "Normal"
+                },
+                "motor_skills": {
+                    "run": "Normal",
+                    "jump": "Normal",
+                    "stand_one_foot": "Normal",
+                    "hop_one_foot": "Normal"
+                },
+                "lateral_dominance": "Diestro"
+            },
+            "speech_history": {
+                "speech_development": {
+                    "babble_age": "6 meses",
+                    "first_words": "12 meses",
+                    "first_words_which": "Mamá, papá",
+                    "understanding_way": "Buena comprensión",
+                    "speech_frequency": "Normal",
+                    "pronunciation_difficulties": "Ninguna"
+                },
+                "oral_movements": {
+                    "bottle_use": "Hasta los 18 meses",
+                    "food_consumption": "Variada",
+                    "eats_well": "Sí",
+                    "preferred_foods": "Frutas, pasta"
+                }
+            },
+            "habits_formation": {
+                "feeding": {
+                    "breastfeeding_type": "Exclusiva",
+                    "breastfeeding_duration": "6 meses",
+                    "first_teeth_age": "6 meses",
+                    "solid_foods_age": "6 meses"
+                },
+                "hygiene": {
+                    "urine_control_age": "2.5 años",
+                    "daytime_control": "Completo",
+                    "nighttime_control": "Completo"
+                },
+                "sleep": {
+                    "duration": "9-10 horas",
+                    "medication_use": "No",
+                    "nocturnal_fears": "Ocasionales",
+                    "sleep_behaviors": {
+                        "talks": False,
+                        "screams": False,
+                        "moves": True,
+                        "sweats": False,
+                        "walks": False,
+                        "resists_bedtime": False
+                    }
+                },
+                "personal_independence": {
+                    "does_errands": "Sí",
+                    "home_errands": "Ayuda con tareas simples",
+                    "helps_at_home": "Sí"
+                }
+            },
+            "conduct": {
+                "maladaptive_behaviors": {
+                    "bites_nails": True,
+                    "sucks_fingers": False,
+                    "bites_lip": False,
+                    "sweaty_hands": True,
+                    "trembling_hands_legs": False,
+                    "unprovoked_aggression": False,
+                    "drops_things_easily": True
+                },
+                "other_problems": "Dificultad para concentrarse en tareas largas",
+                "child_character": "Sociable, activo, algo impulsivo pero cariñoso"
+            },
+            "play": {
+                "play_preferences": {
+                    "plays_alone": "A veces",
+                    "why_alone": "Cuando está concentrado en algo específico",
+                    "preferred_games": "Videojuegos, fútbol, construcción",
+                    "favorite_toys": "Legos, pelota, tablet"
+                }
+            },
+            "educational_history": {
+                "initial_education": {
+                    "age": "3 años",
+                    "adaptation": "Buena",
+                    "difficulties": "Ninguna"
+                },
+                "primary_secondary": {
+                    "age": "6 años",
+                    "performance": "Bueno hasta 6to grado",
+                    "difficulties": "Matemáticas en secundaria"
+                },
+                "learning_difficulties": {
+                    "observed": "Sí",
+                    "since_when": "Inicio de secundaria",
+                    "actions_taken": "Refuerzo académico"
+                },
+                "special_services": {
+                    "received": "No",
+                    "logopedia": "No",
+                    "reinforcement": "Sí"
+                }
+            },
+            "psychosexuality": {
+                "sexual_questions_age": "8 años",
+                "information_provided": "Información básica apropiada para la edad",
+                "opposite_sex_friends": True,
+                "genital_behaviors": {
+                    "present": "No",
+                    "frequency": "",
+                    "circumstances": ""
+                }
+            },
+            "parental_attitudes": {
+                "parental_reactions": ["Preocupación", "Apoyo", "Búsqueda de ayuda"],
+                "beliefs_guilt": "Los padres se sienten algo culpables por la separación temporal",
+                "behavioral_changes": "Más atención y estructura en casa",
+                "punishment_use": {
+                    "method": "Pérdida de privilegios",
+                    "frequency": "Ocasional",
+                    "child_reaction": "Acepta las consecuencias"
+                },
+                "child_behavior": {
+                    "with_parents": "Cariñoso y obediente",
+                    "with_siblings": "No aplica",
+                    "with_friends": "Sociable y popular",
+                    "with_others": "Respetuoso"
+                }
+            },
+            "family_history": {
+                "psychiatric_diseases": False,
+                "speech_problems": False,
+                "learning_difficulties": True,
+                "epilepsy_convulsions": False,
+                "mental_retardation": False,
+                "other_conditions": "Tío paterno con TDAH",
+                "parents_character": "Padres responsables, algo ansiosos",
+                "couple_relationship": "En proceso de reconciliación"
+            },
+            "interview_observations": "El niño se mostró colaborativo durante la entrevista. Presenta signos de ansiedad leve. Los padres muestran buena disposición para el tratamiento."
+        }
+
+        # Test 1: Create anamnesis
+        success, response = self.run_test(
+            "Create Anamnesis (POST)",
+            "POST",
+            f"patients/{self.patient_id}/anamnesis",
+            200,
+            data=anamnesis_data
+        )
+        
+        if not success:
+            print("❌ Failed to create anamnesis")
+            return False
+
+        # Test 2: Get anamnesis
+        success, response = self.run_test(
+            "Get Anamnesis (GET)",
+            "GET",
+            f"patients/{self.patient_id}/anamnesis",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get anamnesis")
+            return False
+
+        # Test 3: Update anamnesis
+        updated_data = anamnesis_data.copy()
+        updated_data["interview_observations"] = "Observaciones actualizadas durante la segunda entrevista."
+        updated_data["general_data"]["age_years"] = 14
+        
+        success, response = self.run_test(
+            "Update Anamnesis (PUT)",
+            "PUT",
+            f"patients/{self.patient_id}/anamnesis",
+            200,
+            data=updated_data
+        )
+        
+        if not success:
+            print("❌ Failed to update anamnesis")
+            return False
+
+        # Test 4: Verify update
+        success, response = self.run_test(
+            "Verify Anamnesis Update",
+            "GET",
+            f"patients/{self.patient_id}/anamnesis",
+            200
+        )
+        
+        if success and response.get('anamnesis', {}).get('interview_observations') == "Observaciones actualizadas durante la segunda entrevista.":
+            print("✅ Anamnesis update verified successfully")
+        else:
+            print("❌ Anamnesis update verification failed")
+            return False
+
+        # Test 5: Verify patient shows anamnesis
+        success, response = self.run_test(
+            "Get Patient with Anamnesis",
+            "GET",
+            f"patients/{self.patient_id}",
+            200
+        )
+        
+        if success and response.get('anamnesis'):
+            print("✅ Patient correctly shows anamnesis data")
+        else:
+            print("❌ Patient does not show anamnesis data")
+            return False
+
+        print("🎉 All anamnesis API tests passed!")
+        return True
+
+    def test_anamnesis_error_cases(self):
+        """Test anamnesis error handling"""
+        print("\n📋 Testing Anamnesis Error Cases...")
+        
+        # Test with non-existent patient
+        success, response = self.run_test(
+            "Get Anamnesis for Non-existent Patient",
+            "GET",
+            "patients/non-existent-id/anamnesis",
+            404
+        )
+        
+        if not success:
+            print("❌ Error handling for non-existent patient failed")
+            return False
+
+        # Test without authentication
+        old_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Access Anamnesis without Authentication",
+            "GET",
+            f"patients/{self.patient_id}/anamnesis",
+            401
+        )
+        
+        self.token = old_token
+        
+        if not success:
+            print("❌ Error handling for unauthorized access failed")
+            return False
+
+        print("✅ Anamnesis error handling tests passed!")
+        return True
+
 def main():
     print("🏥 Psychology Practice Management System - API Testing")
     print("=" * 60)
