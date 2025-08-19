@@ -97,6 +97,7 @@ class Patient(BaseModel):
     evaluations: List[Dict[str, Any]] = []
     diagnosis: Optional[Dict[str, Any]] = None
     progress_notes: List[Dict[str, Any]] = []
+    anamnesis: Optional[Dict[str, Any]] = None  # Nueva ficha de anamnesis
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -110,6 +111,132 @@ class PatientCreate(BaseModel):
     gender: Optional[str] = None
     address: Optional[str] = None
     emergency_contact: Optional[Dict[str, str]] = None
+
+# Modelos para la Ficha de Anamnesis
+class GeneralData(BaseModel):
+    patient_name: str
+    birth_date: str
+    birth_place: str
+    age_years: int
+    age_months: int
+    education_level: str
+    informants: List[str]
+    father_data: Dict[str, str] = {}
+    mother_data: Dict[str, str] = {}
+    siblings_data: List[Dict[str, str]] = []
+
+class ConsultationMotive(BaseModel):
+    difficulty_presentation: str
+    when_where_who: str
+    evolution: str
+    solutions_attempted: str
+    perceived_cause: str
+    treatments_received: str
+    current_illness: Dict[str, Any] = {}
+
+class EvolutionaryHistory(BaseModel):
+    prenatal: Dict[str, Any] = {}
+    perinatal: Dict[str, Any] = {}
+    postnatal: Dict[str, Any] = {}
+
+class MedicalHistory(BaseModel):
+    current_health: str
+    main_diseases: str
+    medications: str
+    accidents: str
+    operations: Dict[str, str] = {}
+    exams: Dict[str, str] = {}
+
+class NeuromuscularDevelopment(BaseModel):
+    motor_milestones: Dict[str, str] = {}
+    difficulties: Dict[str, bool] = {}
+    automatic_movements: Dict[str, str] = {}
+    motor_skills: Dict[str, str] = {}
+    lateral_dominance: str
+
+class SpeechHistory(BaseModel):
+    speech_development: Dict[str, Any] = {}
+    oral_movements: Dict[str, Any] = {}
+
+class HabitsFormation(BaseModel):
+    feeding: Dict[str, Any] = {}
+    hygiene: Dict[str, Any] = {}
+    sleep: Dict[str, Any] = {}
+    personal_independence: Dict[str, Any] = {}
+
+class Conduct(BaseModel):
+    maladaptive_behaviors: Dict[str, bool] = {}
+    other_problems: str
+    child_character: str
+
+class Play(BaseModel):
+    play_preferences: Dict[str, str] = {}
+    social_play: Dict[str, str] = {}
+
+class EducationalHistory(BaseModel):
+    initial_education: Dict[str, str] = {}
+    primary_secondary: Dict[str, str] = {}
+    learning_difficulties: Dict[str, str] = {}
+    special_services: Dict[str, str] = {}
+
+class Psychosexuality(BaseModel):
+    sexual_questions_age: str
+    information_provided: str
+    opposite_sex_friends: bool
+    genital_behaviors: Dict[str, str] = {}
+
+class ParentalAttitudes(BaseModel):
+    parental_reactions: List[str] = []
+    beliefs_guilt: str
+    behavioral_changes: str
+    punishment_use: Dict[str, str] = {}
+    child_behavior: Dict[str, str] = {}
+
+class FamilyHistory(BaseModel):
+    psychiatric_diseases: bool
+    speech_problems: bool
+    learning_difficulties: bool
+    other_conditions: List[str] = []
+    parents_character: str
+    couple_relationship: str
+
+class Anamnesis(BaseModel):
+    patient_id: str
+    history_number: str
+    creation_date: str
+    general_data: GeneralData
+    consultation_motive: ConsultationMotive
+    evolutionary_history: EvolutionaryHistory
+    medical_history: MedicalHistory
+    neuromuscular_development: NeuromuscularDevelopment
+    speech_history: SpeechHistory
+    habits_formation: HabitsFormation
+    conduct: Conduct
+    play: Play
+    educational_history: EducationalHistory
+    psychosexuality: Psychosexuality
+    parental_attitudes: ParentalAttitudes
+    family_history: FamilyHistory
+    interview_observations: str
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class AnamnesisCreate(BaseModel):
+    general_data: Dict[str, Any]
+    consultation_motive: Dict[str, Any]
+    evolutionary_history: Dict[str, Any]
+    medical_history: Dict[str, Any]
+    neuromuscular_development: Dict[str, Any]
+    speech_history: Dict[str, Any]
+    habits_formation: Dict[str, Any]
+    conduct: Dict[str, Any]
+    play: Dict[str, Any]
+    educational_history: Dict[str, Any]
+    psychosexuality: Dict[str, Any]
+    parental_attitudes: Dict[str, Any]
+    family_history: Dict[str, Any]
+    interview_observations: str
 
 class ClinicalHistory(BaseModel):
     patient_id: str
@@ -329,6 +456,82 @@ async def get_patient(patient_id: str, current_user: User = Depends(get_current_
         raise HTTPException(status_code=403, detail="Access denied")
     
     return Patient(**patient)
+
+# Anamnesis endpoints
+@api_router.post("/patients/{patient_id}/anamnesis")
+async def create_anamnesis(patient_id: str, anamnesis_data: AnamnesisCreate, current_user: User = Depends(get_current_user)):
+    patient = await db.patients.find_one({"id": patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Check permissions
+    if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    anamnesis_dict = anamnesis_data.dict()
+    anamnesis_dict["patient_id"] = patient_id
+    anamnesis_dict["history_number"] = f"HCL-{patient_id[-8:]}"
+    anamnesis_dict["creation_date"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    anamnesis_dict["created_by"] = current_user.id
+    anamnesis_dict["created_at"] = datetime.now(timezone.utc)
+    anamnesis_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.patients.update_one(
+        {"id": patient_id},
+        {"$set": {"anamnesis": anamnesis_dict, "updated_at": datetime.now(timezone.utc)}}
+    )
+    return {"message": "Anamnesis created successfully", "anamnesis": anamnesis_dict}
+
+@api_router.put("/patients/{patient_id}/anamnesis")
+async def update_anamnesis(patient_id: str, anamnesis_data: AnamnesisCreate, current_user: User = Depends(get_current_user)):
+    patient = await db.patients.find_one({"id": patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Check permissions
+    if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    anamnesis_dict = anamnesis_data.dict()
+    anamnesis_dict["patient_id"] = patient_id
+    anamnesis_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    # Keep original creation data if exists
+    if patient.get("anamnesis"):
+        anamnesis_dict["history_number"] = patient["anamnesis"].get("history_number", f"HCL-{patient_id[-8:]}")
+        anamnesis_dict["creation_date"] = patient["anamnesis"].get("creation_date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+        anamnesis_dict["created_by"] = patient["anamnesis"].get("created_by", current_user.id)
+        anamnesis_dict["created_at"] = patient["anamnesis"].get("created_at", datetime.now(timezone.utc))
+    else:
+        anamnesis_dict["history_number"] = f"HCL-{patient_id[-8:]}"
+        anamnesis_dict["creation_date"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        anamnesis_dict["created_by"] = current_user.id
+        anamnesis_dict["created_at"] = datetime.now(timezone.utc)
+    
+    await db.patients.update_one(
+        {"id": patient_id},
+        {"$set": {"anamnesis": anamnesis_dict, "updated_at": datetime.now(timezone.utc)}}
+    )
+    return {"message": "Anamnesis updated successfully", "anamnesis": anamnesis_dict}
+
+@api_router.get("/patients/{patient_id}/anamnesis")
+async def get_anamnesis(patient_id: str, current_user: User = Depends(get_current_user)):
+    patient = await db.patients.find_one({"id": patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Check permissions
+    if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    anamnesis = patient.get("anamnesis")
+    if not anamnesis:
+        raise HTTPException(status_code=404, detail="Anamnesis not found")
+    
+    return {"anamnesis": anamnesis}
 
 @api_router.put("/patients/{patient_id}/clinical-history")
 async def update_clinical_history(patient_id: str, history: ClinicalHistory, current_user: User = Depends(get_current_user)):
