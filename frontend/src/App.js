@@ -256,9 +256,15 @@ const Sidebar = ({ isOpen, onClose, currentView, setCurrentView }) => {
         <nav className="space-y-2">
           {menuItems.map((item) => (
             <Button
-              key={item.path}
+              key={item.view}
               variant="ghost"
-              className="w-full justify-start text-white hover:bg-white/10"
+              className={`w-full justify-start text-white hover:bg-white/10 ${
+                currentView === item.view ? 'bg-white/20' : ''
+              }`}
+              onClick={() => {
+                setCurrentView(item.view);
+                onClose(); // Close mobile sidebar after selection
+              }}
             >
               <item.icon className="h-4 w-4 mr-3" />
               {item.label}
