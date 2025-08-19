@@ -214,16 +214,16 @@ const useAuth = () => useContext(AuthContext);
 const useLanguage = () => useContext(LanguageContext);
 
 // Components
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, currentView, setCurrentView }) => {
   const { user, logout } = useAuth();
   const { language, t } = useLanguage();
 
   const menuItems = [
-    { icon: FileText, label: t.dashboard, path: "/" },
-    { icon: Users, label: t.patients, path: "/patients" },
-    { icon: Calendar, label: t.schedule, path: "/schedule" },
-    { icon: DollarSign, label: t.finances, path: "/finances" },
-    { icon: Settings, label: t.settings, path: "/settings" },
+    { icon: FileText, label: t.dashboard, view: "dashboard" },
+    { icon: Users, label: t.patients, view: "patients" },
+    { icon: Calendar, label: t.schedule, view: "schedule" },
+    { icon: DollarSign, label: t.finances, view: "finances" },
+    { icon: Settings, label: t.settings, view: "settings" },
   ];
 
   return (
