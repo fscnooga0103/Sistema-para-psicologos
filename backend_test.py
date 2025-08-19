@@ -107,13 +107,13 @@ class PsychologyPortalAPITester:
     def test_create_patient(self):
         """Create a test patient"""
         patient_data = {
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "john.doe@example.com",
+            "first_name": "Juan",
+            "last_name": "Pérez",
+            "email": "juan.perez@test.com",
             "phone": "+1234567890",
-            "date_of_birth": "1990-01-15",
+            "date_of_birth": "2010-05-15",
             "gender": "male",
-            "address": "123 Main St, City, State 12345"
+            "address": "123 Test Street"
         }
         
         success, response = self.run_test(
@@ -125,6 +125,8 @@ class PsychologyPortalAPITester:
         )
         
         if success and 'id' in response:
+            self.patient_id = response['id']
+            print(f"   Created patient with ID: {self.patient_id}")
             return response['id']
         return None
 
