@@ -707,7 +707,12 @@ const MainApp = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)}
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+      />
       
       <div className="flex-1 flex flex-col lg:ml-0">
         <Header onMenuClick={() => setSidebarOpen(true)} />
