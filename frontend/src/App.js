@@ -504,6 +504,8 @@ const PatientManagement = () => {
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAnamnesisModal, setShowAnamnesisModal] = useState(false);
+  const [currentPatientForAnamnesis, setCurrentPatientForAnamnesis] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -519,6 +521,21 @@ const PatientManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenAnamnesis = (patient) => {
+    setCurrentPatientForAnamnesis(patient);
+    setShowAnamnesisModal(true);
+  };
+
+  const handleCloseAnamnesis = () => {
+    setShowAnamnesisModal(false);
+    setCurrentPatientForAnamnesis(null);
+  };
+
+  const handleAnamnesisUpdate = () => {
+    // Refresh patient data after anamnesis update
+    fetchPatients();
   };
 
   const AddPatientModal = () => {
@@ -646,10 +663,9 @@ const PatientManagement = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {patients.map((patient) => (
-          <Card key={patient.id} className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => setSelectedPatient(patient)}>
+          <Card key={patient.id} className="hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="font-semibold text-lg text-gray-900">
                     {patient.first_name} {patient.last_name}
@@ -661,9 +677,30 @@ const PatientManagement = () => {
                   {patient.is_active ? t.active : t.inactive}
                 </Badge>
               </div>
-              <div className="mt-4 flex items-center space-x-4 text-xs text-gray-500">
+              
+              <div className="flex items-center space-x-4 text-xs text-gray-500 mb-4">
                 <span>{patient.gender}</span>
                 <span>{patient.date_of_birth}</span>
+              </div>
+
+              <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleOpenAnamnesis(patient)}
+                  className="flex items-center space-x-1"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>
+                    {patient.anamnesis ? 'Ver Historia Clínica' : 'Crear Historia Clínica'}
+                  </span>
+                </Button>
+                
+                {patient.anamnesis && (
+                  <Badge variant="secondary" className="text-xs">
+                    Historia completa
+                  </Badge>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -685,6 +722,14 @@ const PatientManagement = () => {
       )}
 
       <AddPatientModal />
+      
+      {/* Anamnesis Form Modal */}
+      <AnamnesisForm
+        patient={currentPatientForAnamnesis}
+        isOpen={showAnamnesisModal}
+        onClose={handleCloseAnamnesis}
+        onSave={handleAnamnesisUpdate}
+      />
     </div>
   );
 };
