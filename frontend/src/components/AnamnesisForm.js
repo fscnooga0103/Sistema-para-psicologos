@@ -401,7 +401,7 @@ const AnamnesisForm = ({ patient, isOpen, onClose, onSave }) => {
     { 
       id: 'play', 
       title: 'Juego', 
-      icon: GameController2, 
+      icon: Gamepad2, 
       description: 'Comportamiento lúdico y social' 
     },
     { 
