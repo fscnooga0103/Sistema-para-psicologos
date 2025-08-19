@@ -276,7 +276,32 @@ async def get_centers(current_user: User = Depends(require_role([UserRole.SUPER_
 async def create_patient(patient: PatientCreate, current_user: User = Depends(get_current_user)):
     patient_dict = patient.dict()
     patient_dict["psychologist_id"] = current_user.id
-    patient_dict["center_id"] = current_user.center_id
+    
+    # Handle center_id for different user roles
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # For super admin, use a default center or create one if needed
+        if not current_user.center_id:
+            # Get the first available center or create a default one
+            existing_center = await db.centers.find_one()
+            if existing_center:
+                patient_dict["center_id"] = existing_center["id"]
+            else:
+                # Create a default center for super admin
+                default_center = {
+                    "id": str(uuid.uuid4()),
+                    "name": "Default Psychology Center",
+                    "address": "Main Office",
+                    "phone": "+1000000000",
+                    "email": "admin@psychologyportal.com",
+                    "created_at": datetime.now(timezone.utc)
+                }
+                await db.centers.insert_one(default_center)
+                patient_dict["center_id"] = default_center["id"]
+        else:
+            patient_dict["center_id"] = current_user.center_id
+    else:
+        patient_dict["center_id"] = current_user.center_id
+    
     patient_obj = Patient(**patient_dict)
     await db.patients.insert_one(patient_obj.dict())
     return patient_obj
