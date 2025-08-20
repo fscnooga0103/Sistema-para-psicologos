@@ -2195,9 +2195,16 @@ const PatientManagement = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900">Diagnóstico Presuntivo</h3>
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    setEditingDiagnosis(selectedPatient.diagnosis);
+                    setShowDiagnosisModal(true);
+                  }}
+                >
                   <Edit className="h-4 w-4 mr-1" />
-                  Editar
+                  {selectedPatient.diagnosis ? 'Editar' : 'Agregar'}
                 </Button>
               </div>
               
@@ -2234,7 +2241,8 @@ const PatientManagement = () => {
                         selectedPatient.diagnosis.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-green-100 text-green-800'
                       }`}>
-                        {selectedPatient.diagnosis.severity}
+                        {selectedPatient.diagnosis.severity === 'high' ? 'Severa' :
+                         selectedPatient.diagnosis.severity === 'medium' ? 'Moderada' : 'Leve'}
                       </Badge>
                     </div>
                     
@@ -2249,8 +2257,10 @@ const PatientManagement = () => {
               ) : (
                 <div className="text-center py-8">
                   <Stethoscope className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No hay diagnóstico registrado</p>
-                  <Button size="sm" className="mt-2">Agregar Diagnóstico</Button>
+                  <p className="text-gray-500 mb-3">No hay diagnóstico registrado</p>
+                  <Button size="sm" onClick={() => setShowDiagnosisModal(true)}>
+                    Agregar Diagnóstico
+                  </Button>
                 </div>
               )}
             </div>
