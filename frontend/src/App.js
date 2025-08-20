@@ -1516,6 +1516,9 @@ const PatientManagement = () => {
   const [showAnamnesisModal, setShowAnamnesisModal] = useState(false);
   const [currentPatientForAnamnesis, setCurrentPatientForAnamnesis] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [patientNotes, setPatientNotes] = useState('');
+  const [activeTab, setActiveTab] = useState('general');
 
   useEffect(() => {
     fetchPatients();
@@ -1545,6 +1548,41 @@ const PatientManagement = () => {
   const handleAnamnesisUpdate = () => {
     // Refresh patient data after anamnesis update
     fetchPatients();
+  };
+
+  const openPatientSidebar = (patient) => {
+    setSelectedPatient(patient);
+    setPatientNotes(patient.notes || '');
+    setSidebarOpen(true);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+    setSelectedPatient(null);
+    setPatientNotes('');
+    setActiveTab('general');
+  };
+
+  const savePatientNotes = async () => {
+    if (!selectedPatient) return;
+    
+    try {
+      await axios.put(`${API}/patients/${selectedPatient.id}`, {
+        notes: patientNotes
+      });
+      
+      // Update local patient data
+      setPatients(patients.map(p => 
+        p.id === selectedPatient.id 
+          ? { ...p, notes: patientNotes }
+          : p
+      ));
+      
+      alert('Notas guardadas exitosamente');
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      alert('Error al guardar las notas');
+    }
   };
 
   const AddPatientModal = () => {
