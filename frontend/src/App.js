@@ -2777,6 +2777,23 @@ const UserManagement = () => {
 
     const handleSubmit = async (e) => {
       e.preventDefault();
+      
+      // Validación del frontend
+      if (!formData.first_name || !formData.last_name) {
+        alert('Por favor, completa el nombre y apellido');
+        return;
+      }
+      
+      if (!editingUser && (!formData.username || !formData.email || !formData.password)) {
+        alert('Por favor, completa todos los campos requeridos');
+        return;
+      }
+      
+      if (!editingUser && formData.password.length < 6) {
+        alert('La contraseña debe tener al menos 6 caracteres');
+        return;
+      }
+      
       try {
         if (editingUser) {
           // Update user (exclude password and username/email if not provided)
@@ -2786,8 +2803,10 @@ const UserManagement = () => {
           if (!updateData.password) delete updateData.password;
           
           await axios.put(`${API}/users/${editingUser.id}`, updateData);
+          alert('Usuario actualizado exitosamente');
         } else {
           await axios.post(`${API}/users`, formData);
+          alert('Usuario creado exitosamente');
         }
         
         fetchUsers();
@@ -2806,7 +2825,16 @@ const UserManagement = () => {
         });
       } catch (error) {
         console.error('Error saving user:', error);
-        alert(error.response?.data?.detail || 'Error al guardar usuario');
+        const errorMessage = error.response?.data?.detail || 'Error al guardar usuario';
+        
+        // Mensajes de error más específicos
+        if (errorMessage.includes('already exists')) {
+          alert('Este email o nombre de usuario ya está registrado. Por favor, usa uno diferente.');
+        } else if (errorMessage.includes('validation')) {
+          alert('Por favor, verifica que todos los campos estén correctamente completados.');
+        } else {
+          alert(`Error: ${errorMessage}`);
+        }
       }
     };
 
