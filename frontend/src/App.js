@@ -510,6 +510,344 @@ const AppointmentManagement = () => {
   );
 };
 
+const SessionManagement = () => {
+  const { t } = useLanguage();
+  const [objectives, setObjectives] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [selectedWeek, setSelectedWeek] = useState(getWeekStart(new Date()));
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedPatient, setSelectedPatient] = useState('all');
+
+  function getWeekStart(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    return new Date(d.setDate(diff)).toISOString().split('T')[0];
+  }
+
+  function formatWeekRange(weekStart) {
+    const start = new Date(weekStart);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    
+    return `${start.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}`;
+  }
+
+  useEffect(() => {
+    fetchObjectives();
+    fetchPatients();
+  }, [selectedWeek, selectedPatient]);
+
+  const fetchObjectives = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append('week_start_date', selectedWeek);
+      if (selectedPatient !== 'all') {
+        params.append('patient_id', selectedPatient);
+      }
+      
+      const response = await axios.get(`${API}/session-objectives?${params.toString()}`);
+      setObjectives(response.data);
+    } catch (error) {
+      console.error('Error fetching objectives:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      const response = await axios.get(`${API}/patients`);
+      setPatients(response.data);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
+
+  const AddObjectiveModal = () => {
+    const [formData, setFormData] = useState({
+      patient_id: '',
+      week_start_date: selectedWeek,
+      objective_title: '',
+      objective_description: '',
+      priority: 'medium',
+      target_date: ''
+    });
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await axios.post(`${API}/session-objectives`, formData);
+        fetchObjectives();
+        setShowAddModal(false);
+        setFormData({
+          patient_id: '',
+          week_start_date: selectedWeek,
+          objective_title: '',
+          objective_description: '',
+          priority: 'medium',
+          target_date: ''
+        });
+      } catch (error) {
+        console.error('Error creating objective:', error);
+      }
+    };
+
+    return (
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nuevo Objetivo Semanal</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="patient_id">Paciente</Label>
+              <Select onValueChange={(value) => setFormData({...formData, patient_id: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar paciente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.first_name} {patient.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="objective_title">Título del Objetivo</Label>
+              <Input
+                id="objective_title"
+                value={formData.objective_title}
+                onChange={(e) => setFormData({...formData, objective_title: e.target.value})}
+                placeholder="Ej: Reducir episodios de ansiedad"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="objective_description">Descripción</Label>
+              <Textarea
+                id="objective_description"
+                value={formData.objective_description}
+                onChange={(e) => setFormData({...formData, objective_description: e.target.value})}
+                placeholder="Describe el objetivo y las acciones específicas a realizar..."
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="priority">Prioridad</Label>
+                <Select onValueChange={(value) => setFormData({...formData, priority: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar prioridad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Baja</SelectItem>
+                    <SelectItem value="medium">Media</SelectItem>
+                    <SelectItem value="high">Alta</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="target_date">Fecha Objetivo</Label>
+                <Input
+                  id="target_date"
+                  type="date"
+                  value={formData.target_date}
+                  onChange={(e) => setFormData({...formData, target_date: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  const getPriorityColor = (priority) => {
+    switch(priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'low': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in_progress': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const updateObjectiveStatus = async (objectiveId, newStatus) => {
+    try {
+      await axios.put(`${API}/session-objectives/${objectiveId}`, { status: newStatus });
+      fetchObjectives();
+    } catch (error) {
+      console.error('Error updating objective:', error);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-6">Cargando...</div>;
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Gestión de Sesiones y Objetivos</h1>
+        <Button onClick={() => setShowAddModal(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Objetivo
+        </Button>
+      </div>
+
+      <div className="flex items-center space-x-4 mb-6">
+        <div>
+          <Label htmlFor="week-select">Semana</Label>
+          <Input
+            id="week-select"
+            type="date"
+            value={selectedWeek}
+            onChange={(e) => setSelectedWeek(getWeekStart(new Date(e.target.value)))}
+            className="mt-1"
+          />
+          <p className="text-xs text-gray-500 mt-1">{formatWeekRange(selectedWeek)}</p>
+        </div>
+        <div>
+          <Label htmlFor="patient-filter">Paciente</Label>
+          <Select value={selectedPatient} onValueChange={setSelectedPatient}>
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Todos los pacientes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los pacientes</SelectItem>
+              {patients.map((patient) => (
+                <SelectItem key={patient.id} value={patient.id}>
+                  {patient.first_name} {patient.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-end">
+          <Button 
+            variant="outline"
+            onClick={() => setSelectedWeek(getWeekStart(new Date()))}
+          >
+            Esta Semana
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {objectives.map((objective) => {
+          const patient = patients.find(p => p.id === objective.patient_id);
+          return (
+            <Card key={objective.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">
+                      {objective.objective_title}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {patient ? `${patient.first_name} ${patient.last_name}` : 'Paciente no encontrado'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <Badge className={getPriorityColor(objective.priority)}>
+                      {objective.priority === 'high' ? 'Alta' : 
+                       objective.priority === 'low' ? 'Baja' : 'Media'}
+                    </Badge>
+                    <Badge className={getStatusColor(objective.status)}>
+                      {objective.status === 'completed' ? 'Completado' :
+                       objective.status === 'in_progress' ? 'En Progreso' :
+                       objective.status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  <p className="text-sm text-gray-600">
+                    {objective.objective_description}
+                  </p>
+                  {objective.target_date && (
+                    <p className="text-xs text-gray-500">
+                      <strong>Fecha objetivo:</strong> {new Date(objective.target_date).toLocaleDateString('es-ES')}
+                    </p>
+                  )}
+                  {objective.completion_notes && (
+                    <p className="text-sm text-green-600 bg-green-50 p-2 rounded">
+                      <strong>Notas de finalización:</strong> {objective.completion_notes}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex space-x-2">
+                  {objective.status === 'pending' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => updateObjectiveStatus(objective.id, 'in_progress')}
+                    >
+                      Iniciar
+                    </Button>
+                  )}
+                  {objective.status === 'in_progress' && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => updateObjectiveStatus(objective.id, 'completed')}
+                    >
+                      Completar
+                    </Button>
+                  )}
+                  {objective.status !== 'completed' && objective.status !== 'cancelled' && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => updateObjectiveStatus(objective.id, 'cancelled')}
+                    >
+                      Cancelar
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {objectives.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay objetivos para esta semana</h3>
+            <p className="text-gray-500 mb-4">Crea objetivos semanales para hacer seguimiento del progreso</p>
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Objetivo
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <AddObjectiveModal />
+    </div>
+  );
+};
+
 const useAuth = () => useContext(AuthContext);
 const useLanguage = () => useContext(LanguageContext);
 
