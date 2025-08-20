@@ -226,6 +226,7 @@ const AppointmentManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'timeline'
 
   useEffect(() => {
     fetchAppointments();
@@ -250,6 +251,22 @@ const AppointmentManagement = () => {
     } catch (error) {
       console.error('Error fetching patients:', error);
     }
+  };
+
+  // Generate timeline hours (8 AM to 8 PM)
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 8; hour <= 20; hour++) {
+      const timeString = `${hour.toString().padStart(2, '0')}:00`;
+      const appointment = appointments.find(apt => apt.appointment_time === timeString);
+      slots.push({
+        time: timeString,
+        displayTime: `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`,
+        appointment: appointment || null,
+        available: !appointment
+      });
+    }
+    return slots;
   };
 
   const AddAppointmentModal = () => {
