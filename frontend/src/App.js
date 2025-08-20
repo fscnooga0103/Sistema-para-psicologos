@@ -1878,6 +1878,228 @@ const PatientManagement = () => {
     );
   };
 
+  // Evaluation Modal Component
+  const EvaluationModal = () => {
+    const [formData, setFormData] = useState({
+      evaluation_type: '',
+      evaluation_date: new Date().toISOString().split('T')[0],
+      results: {},
+      notes: ''
+    });
+
+    useEffect(() => {
+      if (editingEvaluation) {
+        setFormData(editingEvaluation);
+      }
+    }, [editingEvaluation]);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await axios.post(`${API}/patients/${selectedPatient.id}/evaluations`, {
+          patient_id: selectedPatient.id,
+          ...formData
+        });
+        
+        // Refresh patient data
+        fetchPatients();
+        setShowEvaluationModal(false);
+        setEditingEvaluation(null);
+        setFormData({
+          evaluation_type: '',
+          evaluation_date: new Date().toISOString().split('T')[0],
+          results: {},
+          notes: ''
+        });
+      } catch (error) {
+        console.error('Error saving evaluation:', error);
+      }
+    };
+
+    return (
+      <Dialog open={showEvaluationModal} onOpenChange={setShowEvaluationModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingEvaluation ? 'Editar Evaluación' : 'Nueva Evaluación'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="evaluation_type">Tipo de Evaluación</Label>
+              <Select onValueChange={(value) => setFormData({...formData, evaluation_type: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="psychological">Evaluación Psicológica</SelectItem>
+                  <SelectItem value="cognitive">Evaluación Cognitiva</SelectItem>
+                  <SelectItem value="emotional">Evaluación Emocional</SelectItem>
+                  <SelectItem value="behavioral">Evaluación Conductual</SelectItem>
+                  <SelectItem value="neuropsychological">Evaluación Neuropsicológica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="evaluation_date">Fecha de Evaluación</Label>
+              <Input
+                id="evaluation_date"
+                type="date"
+                value={formData.evaluation_date}
+                onChange={(e) => setFormData({...formData, evaluation_date: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="notes">Resultados y Notas</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                placeholder="Describe los resultados de la evaluación..."
+                className="min-h-[100px]"
+                required
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setShowEvaluationModal(false);
+                  setEditingEvaluation(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  // Diagnosis Modal Component
+  const DiagnosisModal = () => {
+    const [formData, setFormData] = useState({
+      primary_diagnosis: '',
+      secondary_diagnosis: '',
+      dsm5_codes: [],
+      severity: 'medium',
+      notes: ''
+    });
+
+    useEffect(() => {
+      if (editingDiagnosis) {
+        setFormData(editingDiagnosis);
+      } else if (selectedPatient?.diagnosis) {
+        setFormData(selectedPatient.diagnosis);
+      }
+    }, [editingDiagnosis, selectedPatient]);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await axios.put(`${API}/patients/${selectedPatient.id}/diagnosis`, {
+          patient_id: selectedPatient.id,
+          ...formData
+        });
+        
+        // Refresh patient data
+        fetchPatients();
+        setShowDiagnosisModal(false);
+        setEditingDiagnosis(null);
+        setFormData({
+          primary_diagnosis: '',
+          secondary_diagnosis: '',
+          dsm5_codes: [],
+          severity: 'medium',
+          notes: ''
+        });
+      } catch (error) {
+        console.error('Error saving diagnosis:', error);
+      }
+    };
+
+    return (
+      <Dialog open={showDiagnosisModal} onOpenChange={setShowDiagnosisModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingDiagnosis ? 'Editar Diagnóstico' : 'Nuevo Diagnóstico'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="primary_diagnosis">Diagnóstico Principal</Label>
+              <Input
+                id="primary_diagnosis"
+                value={formData.primary_diagnosis}
+                onChange={(e) => setFormData({...formData, primary_diagnosis: e.target.value})}
+                placeholder="Ej: Trastorno de ansiedad generalizada"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="secondary_diagnosis">Diagnóstico Secundario</Label>
+              <Input
+                id="secondary_diagnosis"
+                value={formData.secondary_diagnosis}
+                onChange={(e) => setFormData({...formData, secondary_diagnosis: e.target.value})}
+                placeholder="Diagnóstico secundario (opcional)"
+              />
+            </div>
+            <div>
+              <Label htmlFor="severity">Severidad</Label>
+              <Select onValueChange={(value) => setFormData({...formData, severity: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar severidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Leve</SelectItem>
+                  <SelectItem value="medium">Moderada</SelectItem>
+                  <SelectItem value="high">Severa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="dsm5_codes">Códigos DSM-5 (separados por comas)</Label>
+              <Input
+                id="dsm5_codes"
+                value={Array.isArray(formData.dsm5_codes) ? formData.dsm5_codes.join(', ') : ''}
+                onChange={(e) => setFormData({
+                  ...formData, 
+                  dsm5_codes: e.target.value.split(',').map(code => code.trim()).filter(code => code)
+                })}
+                placeholder="Ej: F41.1, F32.9"
+              />
+            </div>
+            <div>
+              <Label htmlFor="notes">Notas del Diagnóstico</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                placeholder="Observaciones adicionales sobre el diagnóstico..."
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setShowDiagnosisModal(false);
+                  setEditingDiagnosis(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   // Patient Sidebar Component
   const PatientSidebar = () => {
     if (!selectedPatient) return null;
