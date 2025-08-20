@@ -441,36 +441,7 @@ def require_role(required_roles: List[str]):
         return current_user
     return role_checker
 
-# Auth endpoints
-@api_router.post("/auth/register", response_model=User)
-async def register_user(user: UserCreate, current_user: User = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]))):
-    # Check if user already exists
-    existing_user = await db.users.find_one({"email": user.email})
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-    
-    # Validate role permissions
-    if current_user.role == UserRole.CENTER_ADMIN and user.role == UserRole.SUPER_ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Center Admin cannot create Super Admin users"
-        )
-    
-    if current_user.role == UserRole.CENTER_ADMIN:
-        user.center_id = current_user.center_id
-    
-    # Create user
-    hashed_password = get_password_hash(user.password)
-    user_dict = user.dict()
-    user_dict["password"] = hashed_password
-    del user_dict["password"]  # Don't store password in user object
-    user_obj = User(**user_dict)
-    
-    await db.users.insert_one({**user_obj.dict(), "password": hashed_password})
-    return user_obj
+# Auth endpoints - Legacy register endpoint removed, use POST /users instead
 
 @api_router.post("/auth/login", response_model=Token)
 async def login_user(user_data: UserLogin):
