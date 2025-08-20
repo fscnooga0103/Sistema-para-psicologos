@@ -373,6 +373,12 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Settings working perfectly! All 4 tabs functional (Perfil, Preferencias, Seguridad, Acerca de). Language toggle working perfectly (Spanish ↔ English). Configuration interface fully operational."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE CONFIRMED (User Report): Settings section showing red error screen due to missing Lock icon import from lucide-react. Error: 'Illegal constructor' and 'An error occurred in the <Lock> component'. This prevents access to all Settings functionality including Profile, Preferences, Security, and About tabs. Issue confirmed through comprehensive testing - user report is accurate."
+      - working: true
+        agent: "testing"
+        comment: "🎉 SETTINGS ISSUE COMPLETELY RESOLVED! Fixed missing Lock icon import in lucide-react imports. Comprehensive testing completed: ✅ Login with admin@psychologyportal.com/admin123 successful ✅ Settings section accessible from sidebar ✅ Settings page loads without red error screen ✅ All 4 tabs working perfectly: Perfil (Profile), Preferencias (Preferences), Seguridad (Security), Acerca de (About) ✅ Profile tab shows user data fields (Name, Email, Phone, Specialization, License) ✅ Preferences tab shows work settings (Duration, Rate, Hours, Language dropdown, Notifications) ✅ Security tab shows password change fields ✅ About tab shows system information and features ✅ No JavaScript errors related to Lock component ✅ Language toggle functionality working. Settings functionality is now FULLY OPERATIONAL and ready for production use."
 
   - task: "Responsive Design"
     implemented: true
