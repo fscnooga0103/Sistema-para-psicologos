@@ -3379,10 +3379,6 @@ const SettingsManagement = () => {
     </div>
   );
 };
-      default:
-        return <Dashboard onNavigate={setCurrentView} />;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
