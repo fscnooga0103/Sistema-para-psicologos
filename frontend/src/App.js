@@ -2686,6 +2686,11 @@ const MainApp = () => {
         return <UserManagement />;
       case 'settings':
         return <SettingsManagement />;
+      default:
+        return <Dashboard onNavigate={setCurrentView} />;
+    }
+  };
+
 const UserManagement = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
