@@ -896,6 +896,130 @@ async def delete_session_objective(objective_id: str, current_user: User = Depen
     await db.session_objectives.delete_one({"id": objective_id})
     return {"message": "Session objective deleted successfully"}
 
+# Payment endpoints
+@api_router.post("/payments", response_model=Payment)
+async def create_payment(payment: PaymentCreate, current_user: User = Depends(get_current_user)):
+    # Verify patient exists and user has access
+    patient = await db.patients.find_one({"id": payment.patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Check permissions
+    if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    payment_dict = payment.dict()
+    payment_dict["psychologist_id"] = current_user.id
+    payment_dict["created_by"] = current_user.id
+    
+    payment_obj = Payment(**payment_dict)
+    await db.payments.insert_one(payment_obj.dict())
+    return payment_obj
+
+@api_router.get("/payments", response_model=List[Payment])
+async def get_payments(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    patient_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    query = {}
+    
+    # Role-based filtering
+    if current_user.role == UserRole.PSYCHOLOGIST:
+        query["psychologist_id"] = current_user.id
+    elif current_user.role == UserRole.CENTER_ADMIN:
+        # Get all psychologists from this center
+        center_psychologists = await db.users.find({"center_id": current_user.center_id, "role": UserRole.PSYCHOLOGIST}).to_list(1000)
+        psychologist_ids = [p["id"] for p in center_psychologists] + [current_user.id]
+        query["psychologist_id"] = {"$in": psychologist_ids}
+    
+    # Date filtering
+    if start_date and end_date:
+        query["payment_date"] = {"$gte": start_date, "$lte": end_date}
+    elif start_date:
+        query["payment_date"] = {"$gte": start_date}
+    elif end_date:
+        query["payment_date"] = {"$lte": end_date}
+    
+    # Patient filtering
+    if patient_id:
+        query["patient_id"] = patient_id
+    
+    payments = await db.payments.find(query).sort("payment_date", -1).to_list(1000)
+    return [Payment(**payment) for payment in payments]
+
+@api_router.get("/payments/stats")
+async def get_payment_stats(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    from datetime import datetime, timedelta
+    import calendar
+    
+    query = {}
+    
+    # Role-based filtering
+    if current_user.role == UserRole.PSYCHOLOGIST:
+        query["psychologist_id"] = current_user.id
+    elif current_user.role == UserRole.CENTER_ADMIN:
+        center_psychologists = await db.users.find({"center_id": current_user.center_id, "role": UserRole.PSYCHOLOGIST}).to_list(1000)
+        psychologist_ids = [p["id"] for p in center_psychologists] + [current_user.id]
+        query["psychologist_id"] = {"$in": psychologist_ids}
+    
+    # Get all payments
+    all_payments = await db.payments.find(query).to_list(10000)
+    
+    # Calculate stats
+    today = datetime.now().strftime("%Y-%m-%d")
+    week_start = (datetime.now() - timedelta(days=datetime.now().weekday())).strftime("%Y-%m-%d")
+    month_start = datetime.now().replace(day=1).strftime("%Y-%m-%d")
+    
+    daily_total = sum(p["amount"] for p in all_payments if p["payment_date"] == today)
+    weekly_total = sum(p["amount"] for p in all_payments if p["payment_date"] >= week_start)
+    monthly_total = sum(p["amount"] for p in all_payments if p["payment_date"] >= month_start)
+    
+    return {
+        "daily_total": daily_total,
+        "weekly_total": weekly_total,
+        "monthly_total": monthly_total,
+        "total_payments": len(all_payments),
+        "average_per_session": monthly_total / len([p for p in all_payments if p["payment_date"] >= month_start]) if len([p for p in all_payments if p["payment_date"] >= month_start]) > 0 else 0
+    }
+
+@api_router.put("/payments/{payment_id}", response_model=Payment)
+async def update_payment(payment_id: str, update_data: dict, current_user: User = Depends(get_current_user)):
+    payment = await db.payments.find_one({"id": payment_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # Check permissions
+    if current_user.role == UserRole.PSYCHOLOGIST and payment["psychologist_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.payments.update_one(
+        {"id": payment_id},
+        {"$set": update_data}
+    )
+    
+    updated_payment = await db.payments.find_one({"id": payment_id})
+    return Payment(**updated_payment)
+
+@api_router.delete("/payments/{payment_id}")
+async def delete_payment(payment_id: str, current_user: User = Depends(get_current_user)):
+    payment = await db.payments.find_one({"id": payment_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # Check permissions
+    if current_user.role == UserRole.PSYCHOLOGIST and payment["psychologist_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.payments.delete_one({"id": payment_id})
+    return {"message": "Payment deleted successfully"}
+
 # Initialize Super Admin (for first setup)
 @api_router.post("/init/super-admin")
 async def create_initial_super_admin():
