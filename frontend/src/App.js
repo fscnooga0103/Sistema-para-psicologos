@@ -1522,8 +1522,13 @@ const Dashboard = ({ onNavigate }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Pacientes Recientes</CardTitle>
-            <Button size="sm" onClick={() => window.location.hash = '#patients'}>
+            <CardTitle 
+              className="cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={() => onNavigate('patients')}
+            >
+              Pacientes Recientes
+            </CardTitle>
+            <Button size="sm" onClick={() => onNavigate('patients')}>
               <Plus className="h-4 w-4 mr-1" />
               Nuevo Paciente
             </Button>
@@ -1532,7 +1537,11 @@ const Dashboard = ({ onNavigate }) => {
             {recentPatients.length > 0 ? (
               <div className="space-y-3">
                 {recentPatients.map((patient) => (
-                  <div key={patient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div 
+                    key={patient.id} 
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => onNavigate('patients')}
+                  >
                     <div>
                       <p className="font-medium text-gray-900">
                         {patient.first_name} {patient.last_name}
@@ -1544,12 +1553,22 @@ const Dashboard = ({ onNavigate }) => {
                     </Badge>
                   </div>
                 ))}
+                <div className="pt-2 border-t">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => onNavigate('patients')}
+                  >
+                    Ver Todos los Pacientes →
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500 mb-3">No hay pacientes registrados</p>
-                <Button size="sm" onClick={() => window.location.hash = '#patients'}>
+                <Button size="sm" onClick={() => onNavigate('patients')}>
                   <Plus className="h-4 w-4 mr-1" />
                   Agregar Primer Paciente
                 </Button>
@@ -1559,14 +1578,27 @@ const Dashboard = ({ onNavigate }) => {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Citas de Hoy</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle 
+              className="cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={() => onNavigate('schedule')}
+            >
+              Citas de Hoy
+            </CardTitle>
+            <Button size="sm" onClick={() => onNavigate('schedule')}>
+              <Plus className="h-4 w-4 mr-1" />
+              Nueva Cita
+            </Button>
           </CardHeader>
           <CardContent>
             {todayAppointments.length > 0 ? (
               <div className="space-y-3">
                 {todayAppointments.map((appointment) => (
-                  <div key={appointment.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div 
+                    key={appointment.id} 
+                    className="flex items-center justify-between p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+                    onClick={() => onNavigate('schedule')}
+                  >
                     <div>
                       <p className="font-medium text-gray-900">
                         {appointment.appointment_time}
@@ -1585,16 +1617,73 @@ const Dashboard = ({ onNavigate }) => {
                     </Badge>
                   </div>
                 ))}
+                <div className="pt-2 border-t">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => onNavigate('schedule')}
+                  >
+                    Ver Todas las Citas →
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">
                 <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No hay citas programadas para hoy</p>
+                <p className="text-gray-500 mb-3">No hay citas programadas para hoy</p>
+                <Button size="sm" onClick={() => onNavigate('schedule')}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Programar Primera Cita
+                </Button>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Actions Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Acciones Rápidas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2"
+              onClick={() => onNavigate('patients')}
+            >
+              <Users className="h-6 w-6" />
+              <span className="text-sm">Gestión de Pacientes</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2"
+              onClick={() => onNavigate('schedule')}
+            >
+              <Calendar className="h-6 w-6" />
+              <span className="text-sm">Programar Cita</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2"
+              onClick={() => onNavigate('sessions')}
+            >
+              <TrendingUp className="h-6 w-6" />
+              <span className="text-sm">Objetivos Semanales</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2"
+              onClick={() => onNavigate('finances')}
+            >
+              <DollarSign className="h-6 w-6" />
+              <span className="text-sm">Gestión Financiera</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
