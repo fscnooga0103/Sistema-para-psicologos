@@ -2461,6 +2461,10 @@ const PatientManagement = () => {
         onSave={handleAnamnesisUpdate}
       />
       
+      {/* Evaluation and Diagnosis Modals */}
+      <EvaluationModal />
+      <DiagnosisModal />
+      
       <PatientSidebar />
     </div>
   );
