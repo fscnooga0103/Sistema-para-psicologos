@@ -1782,6 +1782,7 @@ const MainApp = () => {
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                 <TabsTrigger value="patients">Patients</TabsTrigger>
                 <TabsTrigger value="schedule">Schedule</TabsTrigger>
+                <TabsTrigger value="sessions">Sessions</TabsTrigger>
                 <TabsTrigger value="finances">Finances</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
