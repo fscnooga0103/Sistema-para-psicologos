@@ -1796,6 +1796,9 @@ const MainApp = () => {
             <TabsContent value="schedule" className="m-0 h-full">
               <AppointmentManagement />
             </TabsContent>
+            <TabsContent value="sessions" className="m-0 h-full">
+              <SessionManagement />
+            </TabsContent>
             <TabsContent value="finances" className="m-0 h-full">
               <FinanceManagement />
             </TabsContent>
