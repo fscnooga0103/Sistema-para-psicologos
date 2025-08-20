@@ -1794,7 +1794,7 @@ const MainApp = () => {
               <AppointmentManagement />
             </TabsContent>
             <TabsContent value="finances" className="m-0 h-full">
-              <div className="p-6"><h1 className="text-2xl">Financial Management (Coming Soon)</h1></div>
+              <FinanceManagement />
             </TabsContent>
             <TabsContent value="settings" className="m-0 h-full">
               <div className="p-6"><h1 className="text-2xl">Settings (Coming Soon)</h1></div>
