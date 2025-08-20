@@ -1023,6 +1023,24 @@ def main():
         
         # Test clinical operations
         tester.test_patient_clinical_operations(patient_id)
+        
+        # Test anamnesis functionality
+        tester.test_anamnesis_apis()
+        tester.test_anamnesis_error_cases()
+        
+        # Test NEW ENDPOINTS as requested
+        print("\n" + "="*60)
+        print("🆕 TESTING NEW ENDPOINTS (as requested)")
+        print("="*60)
+        
+        # Test appointments system
+        tester.test_appointments_apis()
+        
+        # Test session objectives system
+        tester.test_session_objectives_apis()
+        
+        # Test payments system
+        tester.test_payments_apis()
     
     # Print final results
     print("\n" + "=" * 60)
@@ -1030,6 +1048,14 @@ def main():
     
     if tester.tests_passed == tester.tests_run:
         print("🎉 All tests passed! Backend is working correctly.")
+        print("\n✅ SUMMARY OF TESTED FUNCTIONALITY:")
+        print("   • Authentication system with admin@psychologyportal.com")
+        print("   • Patient management (CRUD operations)")
+        print("   • Clinical history and anamnesis system")
+        print("   • Appointments system (NEW)")
+        print("   • Session objectives system (NEW)")
+        print("   • Payments and statistics system (NEW)")
+        print("   • Role-based permissions")
         return 0
     else:
         failed_tests = tester.tests_run - tester.tests_passed
