@@ -2678,7 +2678,348 @@ const MainApp = () => {
         return <SessionManagement />;
       case 'finances':
         return <FinanceManagement />;
-const SettingsManagement = () => {
+const UserManagement = () => {
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  const [users, setUsers] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${API}/users`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const AddUserModal = () => {
+    const [formData, setFormData] = useState({
+      username: '',
+      email: '',
+      first_name: '',
+      last_name: '',
+      password: '',
+      role: 'psychologist',
+      phone: '',
+      specialization: '',
+      license_number: ''
+    });
+
+    useEffect(() => {
+      if (editingUser) {
+        setFormData({
+          ...editingUser,
+          password: '' // Don't prefill password for security
+        });
+      }
+    }, [editingUser]);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        if (editingUser) {
+          // Update user (exclude password and username/email if not provided)
+          const updateData = { ...formData };
+          delete updateData.username;
+          delete updateData.email;
+          if (!updateData.password) delete updateData.password;
+          
+          await axios.put(`${API}/users/${editingUser.id}`, updateData);
+        } else {
+          await axios.post(`${API}/users`, formData);
+        }
+        
+        fetchUsers();
+        setShowAddModal(false);
+        setEditingUser(null);
+        setFormData({
+          username: '',
+          email: '',
+          first_name: '',
+          last_name: '',
+          password: '',
+          role: 'psychologist',
+          phone: '',
+          specialization: '',
+          license_number: ''
+        });
+      } catch (error) {
+        console.error('Error saving user:', error);
+        alert(error.response?.data?.detail || 'Error al guardar usuario');
+      }
+    };
+
+    return (
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="first_name">Nombre</Label>
+                <Input
+                  id="first_name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="last_name">Apellido</Label>
+                <Input
+                  id="last_name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+
+            {!editingUser && (
+              <>
+                <div>
+                  <Label htmlFor="username">Nombre de Usuario</Label>
+                  <Input
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) => setFormData({...formData, username: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Contraseña</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            <div>
+              <Label htmlFor="role">Rol</Label>
+              <Select 
+                value={formData.role}
+                onValueChange={(value) => setFormData({...formData, role: value})}
+                disabled={user.role !== 'super_admin'}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="psychologist">Psicólogo</SelectItem>
+                  {user.role === 'super_admin' && (
+                    <SelectItem value="center_admin">Administrador de Centro</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="license_number">Núm. Licencia</Label>
+                <Input
+                  id="license_number"
+                  value={formData.license_number}
+                  onChange={(e) => setFormData({...formData, license_number: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="specialization">Especialización</Label>
+              <Input
+                id="specialization"
+                value={formData.specialization}
+                onChange={(e) => setFormData({...formData, specialization: e.target.value})}
+                placeholder="Psicología Clínica, Terapia Cognitiva, etc."
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingUser(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">{editingUser ? 'Actualizar' : 'Crear Usuario'}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  const getRoleBadge = (role) => {
+    switch(role) {
+      case 'super_admin':
+        return <Badge className="bg-red-100 text-red-800">Super Admin</Badge>;
+      case 'center_admin':
+        return <Badge className="bg-blue-100 text-blue-800">Admin Centro</Badge>;
+      case 'psychologist':
+        return <Badge className="bg-green-100 text-green-800">Psicólogo</Badge>;
+      default:
+        return <Badge variant="secondary">{role}</Badge>;
+    }
+  };
+
+  const toggleUserStatus = async (userId, currentStatus) => {
+    try {
+      await axios.put(`${API}/users/${userId}`, { is_active: !currentStatus });
+      fetchUsers();
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-6">Cargando...</div>;
+  }
+
+  // Only allow access to admin users
+  if (user.role !== 'super_admin' && user.role !== 'center_admin') {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Acceso Restringido</h3>
+            <p className="text-gray-500">Solo los administradores pueden acceder a la gestión de usuarios</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
+        <Button onClick={() => setShowAddModal(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Usuario
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {users.map((usr) => (
+          <Card key={usr.id} className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-lg text-gray-900">
+                    {usr.first_name} {usr.last_name}
+                  </h3>
+                  <p className="text-sm text-gray-500">{usr.email}</p>
+                  <p className="text-sm text-gray-500">@{usr.username}</p>
+                </div>
+                <div className="flex flex-col space-y-2">
+                  {getRoleBadge(usr.role)}
+                  <Badge variant={usr.is_active ? "default" : "secondary"}>
+                    {usr.is_active ? 'Activo' : 'Inactivo'}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                {usr.phone && (
+                  <p className="text-sm text-gray-600">
+                    <strong>Teléfono:</strong> {usr.phone}
+                  </p>
+                )}
+                {usr.specialization && (
+                  <p className="text-sm text-gray-600">
+                    <strong>Especialización:</strong> {usr.specialization}
+                  </p>
+                )}
+                {usr.license_number && (
+                  <p className="text-sm text-gray-600">
+                    <strong>Licencia:</strong> {usr.license_number}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setEditingUser(usr);
+                    setShowAddModal(true);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Editar
+                </Button>
+                <Button
+                  size="sm"
+                  variant={usr.is_active ? "destructive" : "default"}
+                  onClick={() => toggleUserStatus(usr.id, usr.is_active)}
+                  disabled={usr.id === user.id} // Can't deactivate yourself
+                >
+                  {usr.is_active ? 'Desactivar' : 'Activar'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {users.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay usuarios registrados</h3>
+            <p className="text-gray-500 mb-4">Crea el primer usuario para comenzar</p>
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Usuario
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <AddUserModal />
+    </div>
+  );
+};
   const { user } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState('profile');
