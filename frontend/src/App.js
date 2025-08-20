@@ -2256,7 +2256,7 @@ const MainApp = () => {
             </div>
             
             <TabsContent value="dashboard" className="m-0 h-full">
-              <Dashboard />
+              <Dashboard onNavigate={setCurrentView} />
             </TabsContent>
             <TabsContent value="patients" className="m-0 h-full">
               <PatientManagement />
