@@ -3020,6 +3020,8 @@ const UserManagement = () => {
     </div>
   );
 };
+
+const SettingsManagement = () => {
   const { user } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState('profile');
