@@ -1048,7 +1048,7 @@ const MainApp = () => {
       case 'patients':
         return <PatientManagement />;
       case 'schedule':
-        return <div className="p-6"><h1 className="text-2xl">Schedule Management (Coming Soon)</h1></div>;
+        return <AppointmentManagement />;
       case 'finances':
         return <div className="p-6"><h1 className="text-2xl">Financial Management (Coming Soon)</h1></div>;
       case 'settings':
