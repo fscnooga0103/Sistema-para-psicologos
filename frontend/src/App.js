@@ -1694,6 +1694,243 @@ const PatientManagement = () => {
     );
   };
 
+  // Patient Sidebar Component
+  const PatientSidebar = () => {
+    if (!selectedPatient) return null;
+
+    const sidebarTabs = [
+      { id: 'general', label: 'Información General', icon: Users },
+      { id: 'evaluations', label: 'Evaluaciones', icon: ClipboardList },
+      { id: 'diagnosis', label: 'Diagnóstico', icon: Stethoscope },
+      { id: 'notes', label: 'Notas', icon: FileText }
+    ];
+
+    const renderTabContent = () => {
+      switch(activeTab) {
+        case 'general':
+          return (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Datos Personales</h3>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Nombre:</strong> {selectedPatient.first_name} {selectedPatient.last_name}</p>
+                  <p><strong>Email:</strong> {selectedPatient.email || 'No especificado'}</p>
+                  <p><strong>Teléfono:</strong> {selectedPatient.phone || 'No especificado'}</p>
+                  <p><strong>Fecha de nacimiento:</strong> {selectedPatient.date_of_birth || 'No especificado'}</p>
+                  <p><strong>Género:</strong> {selectedPatient.gender || 'No especificado'}</p>
+                  <p><strong>Dirección:</strong> {selectedPatient.address || 'No especificado'}</p>
+                </div>
+              </div>
+              
+              {selectedPatient.emergency_contact && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Contacto de Emergencia</h3>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Nombre:</strong> {selectedPatient.emergency_contact.name}</p>
+                    <p><strong>Teléfono:</strong> {selectedPatient.emergency_contact.phone}</p>
+                    <p><strong>Relación:</strong> {selectedPatient.emergency_contact.relationship}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        
+        case 'evaluations':
+          return (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Evaluaciones</h3>
+                <Button size="sm" variant="outline">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Nueva
+                </Button>
+              </div>
+              
+              {selectedPatient.evaluations && selectedPatient.evaluations.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedPatient.evaluations.map((evaluation, index) => (
+                    <Card key={index} className="p-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-medium text-gray-900">{evaluation.evaluation_type}</h4>
+                          <span className="text-xs text-gray-500">{evaluation.evaluation_date}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">{evaluation.notes}</p>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <ClipboardList className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No hay evaluaciones registradas</p>
+                  <Button size="sm" className="mt-2">Agregar Evaluación</Button>
+                </div>
+              )}
+            </div>
+          );
+        
+        case 'diagnosis':
+          return (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Diagnóstico Presuntivo</h3>
+                <Button size="sm" variant="outline">
+                  <Edit className="h-4 w-4 mr-1" />
+                  Editar
+                </Button>
+              </div>
+              
+              {selectedPatient.diagnosis ? (
+                <Card className="p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-1">Diagnóstico Principal</h4>
+                      <p className="text-sm text-gray-600">{selectedPatient.diagnosis.primary_diagnosis}</p>
+                    </div>
+                    
+                    {selectedPatient.diagnosis.secondary_diagnosis && (
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-1">Diagnóstico Secundario</h4>
+                        <p className="text-sm text-gray-600">{selectedPatient.diagnosis.secondary_diagnosis}</p>
+                      </div>
+                    )}
+                    
+                    {selectedPatient.diagnosis.dsm5_codes && selectedPatient.diagnosis.dsm5_codes.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-1">Códigos DSM-5</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedPatient.diagnosis.dsm5_codes.map((code, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">{code}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-1">Severidad</h4>
+                      <Badge className={`text-xs ${
+                        selectedPatient.diagnosis.severity === 'high' ? 'bg-red-100 text-red-800' :
+                        selectedPatient.diagnosis.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {selectedPatient.diagnosis.severity}
+                      </Badge>
+                    </div>
+                    
+                    {selectedPatient.diagnosis.notes && (
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-1">Notas</h4>
+                        <p className="text-sm text-gray-600">{selectedPatient.diagnosis.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ) : (
+                <div className="text-center py-8">
+                  <Stethoscope className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No hay diagnóstico registrado</p>
+                  <Button size="sm" className="mt-2">Agregar Diagnóstico</Button>
+                </div>
+              )}
+            </div>
+          );
+        
+        case 'notes':
+          return (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Notas del Paciente</h3>
+                <Button size="sm" onClick={savePatientNotes}>
+                  Guardar
+                </Button>
+              </div>
+              
+              <div>
+                <Textarea
+                  value={patientNotes}
+                  onChange={(e) => setPatientNotes(e.target.value)}
+                  placeholder="Escribe tus notas sobre el paciente aquí..."
+                  className="min-h-[200px]"
+                />
+              </div>
+              
+              {selectedPatient.progress_notes && selectedPatient.progress_notes.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Notas de Progreso</h4>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {selectedPatient.progress_notes.map((note, index) => (
+                      <Card key={index} className="p-3">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm font-medium">{note.session_type}</span>
+                            <span className="text-xs text-gray-500">{note.session_date}</span>
+                          </div>
+                          <p className="text-sm text-gray-600">{note.progress}</p>
+                          {note.homework_assigned && (
+                            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                              <strong>Tarea asignada:</strong> {note.homework_assigned}
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className={`fixed inset-y-0 right-0 z-40 w-96 bg-white shadow-2xl transform transition-transform duration-300 ${
+        sidebarOpen ? 'translate-x-0' : 'translate-x-full'
+      }`}>
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                {selectedPatient.first_name} {selectedPatient.last_name}
+              </h2>
+              <p className="text-sm text-gray-500">Detalles del Paciente</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={closeSidebar}>
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Tabs */}
+          <div className="border-b">
+            <div className="flex space-x-1 p-2">
+              {sidebarTabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveTab(tab.id)}
+                  className="flex-1 text-xs"
+                >
+                  <tab.icon className="h-3 w-3 mr-1" />
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 p-6 overflow-y-auto">
+            {renderTabContent()}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return <div className="p-6">Loading...</div>;
   }
