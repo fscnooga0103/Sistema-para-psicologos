@@ -2014,6 +2014,8 @@ const PatientManagement = () => {
         onClose={handleCloseAnamnesis}
         onSave={handleAnamnesisUpdate}
       />
+      
+      <PatientSidebar />
     </div>
   );
 };
