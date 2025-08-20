@@ -1458,7 +1458,10 @@ const Dashboard = ({ onNavigate }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card 
+          className="border-l-4 border-l-blue-500 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate('patients')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -1470,7 +1473,10 @@ const Dashboard = ({ onNavigate }) => {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card 
+          className="border-l-4 border-l-green-500 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate('patients')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -1482,11 +1488,14 @@ const Dashboard = ({ onNavigate }) => {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
+        <Card 
+          className="border-l-4 border-l-purple-500 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate('schedule')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Today's Appointments</p>
+                <p className="text-sm font-medium text-gray-600">Citas de Hoy</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.appointmentsToday}</p>
               </div>
               <Calendar className="h-8 w-8 text-purple-500" />
@@ -1494,12 +1503,15 @@ const Dashboard = ({ onNavigate }) => {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500">
+        <Card 
+          className="border-l-4 border-l-orange-500 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate('finances')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{t.thisMonth} Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.monthlyRevenue}</p>
+                <p className="text-sm font-medium text-gray-600">Ingresos del Mes</p>
+                <p className="text-2xl font-bold text-gray-900">${stats.monthlyRevenue.toFixed(2)}</p>
               </div>
               <DollarSign className="h-8 w-8 text-orange-500" />
             </div>
