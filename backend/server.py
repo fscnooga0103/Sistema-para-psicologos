@@ -686,6 +686,110 @@ async def add_progress_note(patient_id: str, note: ProgressNote, current_user: U
     )
     return {"message": "Progress note added successfully"}
 
+# Appointment endpoints
+@api_router.post("/appointments", response_model=Appointment)
+async def create_appointment(appointment: AppointmentCreate, current_user: User = Depends(get_current_user)):
+    # Verify patient exists and user has access
+    patient = await db.patients.find_one({"id": appointment.patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Check permissions
+    if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    appointment_dict = appointment.dict()
+    appointment_dict["psychologist_id"] = current_user.id
+    appointment_dict["created_by"] = current_user.id
+    
+    appointment_obj = Appointment(**appointment_dict)
+    await db.appointments.insert_one(appointment_obj.dict())
+    return appointment_obj
+
+@api_router.get("/appointments", response_model=List[Appointment])
+async def get_appointments(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    patient_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    query = {}
+    
+    # Role-based filtering
+    if current_user.role == UserRole.PSYCHOLOGIST:
+        query["psychologist_id"] = current_user.id
+    elif current_user.role == UserRole.CENTER_ADMIN:
+        # Get all psychologists from this center
+        center_psychologists = await db.users.find({"center_id": current_user.center_id, "role": UserRole.PSYCHOLOGIST}).to_list(1000)
+        psychologist_ids = [p["id"] for p in center_psychologists] + [current_user.id]
+        query["psychologist_id"] = {"$in": psychologist_ids}
+    
+    # Date filtering
+    if start_date and end_date:
+        query["appointment_date"] = {"$gte": start_date, "$lte": end_date}
+    elif start_date:
+        query["appointment_date"] = {"$gte": start_date}
+    elif end_date:
+        query["appointment_date"] = {"$lte": end_date}
+    
+    # Patient filtering
+    if patient_id:
+        query["patient_id"] = patient_id
+    
+    appointments = await db.appointments.find(query).sort("appointment_date", 1).to_list(1000)
+    return [Appointment(**appointment) for appointment in appointments]
+
+@api_router.get("/appointments/{appointment_id}", response_model=Appointment)
+async def get_appointment(appointment_id: str, current_user: User = Depends(get_current_user)):
+    appointment = await db.appointments.find_one({"id": appointment_id})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Check permissions
+    if (current_user.role == UserRole.PSYCHOLOGIST and appointment["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN):
+        # For center admin, check if psychologist belongs to their center
+        psychologist = await db.users.find_one({"id": appointment["psychologist_id"]})
+        if not psychologist or psychologist["center_id"] != current_user.center_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    return Appointment(**appointment)
+
+@api_router.put("/appointments/{appointment_id}", response_model=Appointment)
+async def update_appointment(appointment_id: str, update_data: AppointmentUpdate, current_user: User = Depends(get_current_user)):
+    appointment = await db.appointments.find_one({"id": appointment_id})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Check permissions
+    if current_user.role == UserRole.PSYCHOLOGIST and appointment["psychologist_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    update_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.appointments.update_one(
+        {"id": appointment_id},
+        {"$set": update_dict}
+    )
+    
+    updated_appointment = await db.appointments.find_one({"id": appointment_id})
+    return Appointment(**updated_appointment)
+
+@api_router.delete("/appointments/{appointment_id}")
+async def delete_appointment(appointment_id: str, current_user: User = Depends(get_current_user)):
+    appointment = await db.appointments.find_one({"id": appointment_id})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Check permissions
+    if current_user.role == UserRole.PSYCHOLOGIST and appointment["psychologist_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.appointments.delete_one({"id": appointment_id})
+    return {"message": "Appointment deleted successfully"}
+
 # Initialize Super Admin (for first setup)
 @api_router.post("/init/super-admin")
 async def create_initial_super_admin():
