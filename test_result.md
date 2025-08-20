@@ -138,9 +138,9 @@ backend:
 
   - task: "Clinical History & Anamnesis System"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -156,6 +156,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL ISSUE FOUND (User Report Confirmed): Anamnesis creation functionality has authentication/session management problems. During comprehensive UI testing, login with admin@psychologyportal.com/admin123 initially works and dashboard loads showing 4 patients (Juan Pérez, Rene Montalvo, Edgar Rodriguez). However, session expires unexpectedly during navigation, preventing access to patient management and anamnesis functionality. Backend endpoints are responding correctly (verified with curl), but frontend authentication state is not persistent. This confirms user's report that anamnesis creation is not working. Issue appears to be in frontend authentication/session management rather than anamnesis form itself. AnamnesisForm component exists and is properly implemented with all 13 sections, but users cannot reach it due to authentication issues."
+      - working: true
+        agent: "testing"
+        comment: "🎉 ANAMNESIS POST-FIX TESTING SUCCESSFUL! Authentication issue has been RESOLVED. Comprehensive testing completed: ✅ Login with admin@psychologyportal.com/admin123 successful ✅ Session persistence maintained throughout navigation ✅ Successfully navigated to Patient Management without session loss ✅ Historia Clínica buttons accessible (found 4 buttons) ✅ Anamnesis form opens successfully with all 13 sections ✅ Form navigation working (navigated through all sections 1-13) ✅ Data entry functional (filled multiple textareas and input fields) ✅ Save functionality working ('Guardar Anamnesis' button found and clicked successfully) ✅ Success message detected after save ✅ Modal closed and returned to patient list confirming successful save ✅ Session maintained throughout entire anamnesis process. The anamnesis system is now FULLY FUNCTIONAL and the authentication/session management issue has been completely resolved."
 
   - task: "Evaluations & Diagnosis System"
     implemented: true
