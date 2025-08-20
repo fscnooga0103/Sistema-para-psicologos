@@ -1753,7 +1753,7 @@ const MainApp = () => {
       case 'schedule':
         return <AppointmentManagement />;
       case 'finances':
-        return <div className="p-6"><h1 className="text-2xl">Financial Management (Coming Soon)</h1></div>;
+        return <FinanceManagement />;
       case 'settings':
         return <div className="p-6"><h1 className="text-2xl">Settings (Coming Soon)</h1></div>;
       default:
