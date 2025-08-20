@@ -2812,27 +2812,29 @@ const UserManagement = () => {
 
     return (
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg z-50">
           <DialogHeader>
             <DialogTitle>{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="first_name">Nombre</Label>
+                <Label htmlFor="first_name">Nombre *</Label>
                 <Input
                   id="first_name"
                   value={formData.first_name}
                   onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                  placeholder="Nombre"
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="last_name">Apellido</Label>
+                <Label htmlFor="last_name">Apellido *</Label>
                 <Input
                   id="last_name"
                   value={formData.last_name}
                   onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                  placeholder="Apellido"
                   required
                 />
               </div>
@@ -2841,50 +2843,54 @@ const UserManagement = () => {
             {!editingUser && (
               <>
                 <div>
-                  <Label htmlFor="username">Nombre de Usuario</Label>
+                  <Label htmlFor="username">Nombre de Usuario *</Label>
                   <Input
                     id="username"
                     value={formData.username}
                     onChange={(e) => setFormData({...formData, username: e.target.value})}
+                    placeholder="usuario123"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    placeholder="usuario@ejemplo.com"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="password">Contraseña</Label>
+                  <Label htmlFor="password">Contraseña *</Label>
                   <Input
                     id="password"
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    placeholder="Mínimo 6 caracteres"
                     required
+                    minLength={6}
                   />
                 </div>
               </>
             )}
 
             <div>
-              <Label htmlFor="role">Rol</Label>
+              <Label htmlFor="role">Rol *</Label>
               <Select 
                 value={formData.role}
                 onValueChange={(value) => setFormData({...formData, role: value})}
-                disabled={user.role !== 'super_admin'}
+                disabled={user?.role !== 'super_admin'}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar rol" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="psychologist">Psicólogo</SelectItem>
-                  {user.role === 'super_admin' && (
+                  {user?.role === 'super_admin' && (
                     <SelectItem value="center_admin">Administrador de Centro</SelectItem>
                   )}
                 </SelectContent>
@@ -2898,6 +2904,7 @@ const UserManagement = () => {
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  placeholder="555-123-4567"
                 />
               </div>
               <div>
@@ -2906,6 +2913,7 @@ const UserManagement = () => {
                   id="license_number"
                   value={formData.license_number}
                   onChange={(e) => setFormData({...formData, license_number: e.target.value})}
+                  placeholder="PSI-123456"
                 />
               </div>
             </div>
@@ -2920,7 +2928,7 @@ const UserManagement = () => {
               />
             </div>
 
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-2 pt-4">
               <Button 
                 type="button" 
                 variant="outline" 
@@ -2931,7 +2939,9 @@ const UserManagement = () => {
               >
                 Cancelar
               </Button>
-              <Button type="submit">{editingUser ? 'Actualizar' : 'Crear Usuario'}</Button>
+              <Button type="submit" disabled={!formData.first_name || !formData.last_name || (!editingUser && (!formData.username || !formData.email || !formData.password))}>
+                {editingUser ? 'Actualizar' : 'Crear Usuario'}
+              </Button>
             </div>
           </form>
         </DialogContent>
