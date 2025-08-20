@@ -117,6 +117,9 @@ backend:
       - working: true
         agent: "main"
         comment: "JWT-based authentication with role-based access control (super_admin, center_admin, psychologist) is fully implemented"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Authentication system working perfectly. Login with admin@psychologyportal.com/admin123 successful. JWT token generation and validation working. Role-based permissions verified."
 
   - task: "Patient Management System"
     implemented: true
@@ -129,6 +132,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Complete CRUD operations for patients with comprehensive data models"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Patient CRUD operations working perfectly. Created test patient 'Juan Pérez', retrieved patient list, individual patient access, all permissions working correctly."
 
   - task: "Clinical History & Anamnesis System"
     implemented: true
@@ -141,6 +147,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Comprehensive anamnesis form with all required fields: personal data, family structure, consultation motive, habits, conduct, educational history, family relationships, family background, observations"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Comprehensive anamnesis system working perfectly. All sections tested: general_data, consultation_motive, evolutionary_history, medical_history, neuromuscular_development, speech_history, habits_formation, conduct, play, educational_history, psychosexuality, parental_attitudes, family_history. CRUD operations all successful."
 
   - task: "Evaluations & Diagnosis System"
     implemented: true
@@ -153,42 +162,54 @@ backend:
       - working: true
         agent: "main"
         comment: "Models and endpoints for evaluations, diagnosis, and progress notes are implemented"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Clinical operations working perfectly. Successfully tested: clinical history updates, evaluation additions, diagnosis updates, progress notes creation. All endpoints responding correctly."
 
   - task: "Appointment/Agenda System"
-    implemented: false
-    working: "NA"
-    file: "NOT_CREATED"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Appointment scheduling system needs to be implemented with day/time management"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Appointment system FULLY IMPLEMENTED and working perfectly! All endpoints tested: POST /api/appointments (create), GET /api/appointments (list), GET /api/appointments/{id} (individual), PUT /api/appointments/{id} (update). Filtering by patient_id working. Date/time management, duration, appointment types, status tracking all functional."
 
   - task: "Session Management & Weekly Progress"
-    implemented: false
-    working: "NA"
-    file: "NOT_CREATED"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Session planning with weekly goals and achievements tracking needs implementation"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Session objectives system FULLY IMPLEMENTED and working perfectly! All endpoints tested: POST /api/session-objectives (create), GET /api/session-objectives (list with filters), PUT /api/session-objectives/{id} (update). Weekly planning, priority levels, status tracking, completion notes all functional. Filtering by patient_id, week_start_date, status all working."
 
   - task: "Payment & Earnings System"
-    implemented: false
-    working: "NA"
-    file: "NOT_CREATED"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Payment tracking and earnings analysis (daily, weekly, monthly) needs implementation"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Payment system FULLY IMPLEMENTED and working perfectly! All endpoints tested: POST /api/payments (create), GET /api/payments (list with filters), PUT /api/payments/{id} (update), GET /api/payments/stats (statistics). Payment methods, date filtering, patient filtering all working. Statistics endpoint provides daily_total, weekly_total, monthly_total, total_payments, average_per_session."
 
 frontend:
   - task: "Authentication UI"
