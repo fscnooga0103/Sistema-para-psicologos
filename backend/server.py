@@ -38,7 +38,7 @@ app = FastAPI(title="Psychology Practice Management System")
 api_router = APIRouter(prefix="/api")
 
 # Models
-class UserRole:
+class UserRole(str, Enum):
     SUPER_ADMIN = "super_admin"
     CENTER_ADMIN = "center_admin"
     PSYCHOLOGIST = "psychologist"
