@@ -1699,6 +1699,10 @@ const PatientManagement = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [patientNotes, setPatientNotes] = useState('');
   const [activeTab, setActiveTab] = useState('general');
+  const [showEvaluationModal, setShowEvaluationModal] = useState(false);
+  const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
+  const [editingEvaluation, setEditingEvaluation] = useState(null);
+  const [editingDiagnosis, setEditingDiagnosis] = useState(null);
 
   useEffect(() => {
     fetchPatients();
