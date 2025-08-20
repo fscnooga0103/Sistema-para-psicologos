@@ -848,6 +848,371 @@ const SessionManagement = () => {
   );
 };
 
+const FinanceManagement = () => {
+  const { t } = useLanguage();
+  const [payments, setPayments] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [stats, setStats] = useState({});
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
+  useEffect(() => {
+    fetchPayments();
+    fetchPatients();
+    fetchStats();
+  }, [selectedDate]);
+
+  const fetchPayments = async () => {
+    try {
+      const startDate = getDateRange().start;
+      const endDate = getDateRange().end;
+      
+      const response = await axios.get(`${API}/payments?start_date=${startDate}&end_date=${endDate}`);
+      setPayments(response.data);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      const response = await axios.get(`${API}/patients`);
+      setPatients(response.data);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(`${API}/payments/stats`);
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching payment stats:', error);
+    }
+  };
+
+  const getDateRange = () => {
+    const date = new Date(selectedDate);
+    let start, end;
+
+    switch(selectedPeriod) {
+      case 'day':
+        start = end = selectedDate;
+        break;
+      case 'week':
+        const weekStart = new Date(date);
+        const day = weekStart.getDay();
+        const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1);
+        weekStart.setDate(diff);
+        
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        
+        start = weekStart.toISOString().split('T')[0];
+        end = weekEnd.toISOString().split('T')[0];
+        break;
+      case 'month':
+        start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
+        end = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
+        break;
+      default:
+        start = end = selectedDate;
+    }
+
+    return { start, end };
+  };
+
+  const AddPaymentModal = () => {
+    const [formData, setFormData] = useState({
+      patient_id: '',
+      amount: '',
+      payment_date: new Date().toISOString().split('T')[0],
+      session_date: new Date().toISOString().split('T')[0],
+      payment_method: 'efectivo',
+      notes: ''
+    });
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await axios.post(`${API}/payments`, {
+          ...formData,
+          amount: parseFloat(formData.amount)
+        });
+        fetchPayments();
+        fetchStats();
+        setShowAddModal(false);
+        setFormData({
+          patient_id: '',
+          amount: '',
+          payment_date: new Date().toISOString().split('T')[0],
+          session_date: new Date().toISOString().split('T')[0],
+          payment_method: 'efectivo',
+          notes: ''
+        });
+      } catch (error) {
+        console.error('Error creating payment:', error);
+      }
+    };
+
+    return (
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Registrar Pago</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="patient_id">Paciente</Label>
+              <Select onValueChange={(value) => setFormData({...formData, patient_id: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar paciente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.first_name} {patient.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="amount">Monto</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                placeholder="0.00"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="payment_date">Fecha de Pago</Label>
+                <Input
+                  id="payment_date"
+                  type="date"
+                  value={formData.payment_date}
+                  onChange={(e) => setFormData({...formData, payment_date: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="session_date">Fecha de Sesión</Label>
+                <Input
+                  id="session_date"
+                  type="date"
+                  value={formData.session_date}
+                  onChange={(e) => setFormData({...formData, session_date: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="payment_method">Método de Pago</Label>
+              <Select onValueChange={(value) => setFormData({...formData, payment_method: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Método de pago" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="efectivo">Efectivo</SelectItem>
+                  <SelectItem value="tarjeta">Tarjeta</SelectItem>
+                  <SelectItem value="transferencia">Transferencia</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="notes">Notas</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                placeholder="Notas adicionales..."
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  if (loading) {
+    return <div className="p-6">Cargando...</div>;
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Gestión Financiera</h1>
+        <Button onClick={() => setShowAddModal(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Registrar Pago
+        </Button>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-l-4 border-l-green-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Ganancia Diaria</p>
+                <p className="text-2xl font-bold text-gray-900">${stats.daily_total?.toFixed(2) || '0.00'}</p>
+              </div>
+              <DollarSign className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Ganancia Semanal</p>
+                <p className="text-2xl font-bold text-gray-900">${stats.weekly_total?.toFixed(2) || '0.00'}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-purple-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Ganancia Mensual</p>
+                <p className="text-2xl font-bold text-gray-900">${stats.monthly_total?.toFixed(2) || '0.00'}</p>
+              </div>
+              <Calendar className="h-8 w-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-orange-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Promedio por Sesión</p>
+                <p className="text-2xl font-bold text-gray-900">${stats.average_per_session?.toFixed(2) || '0.00'}</p>
+              </div>
+              <Stethoscope className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center space-x-4 mb-6">
+        <div>
+          <Label htmlFor="period-select">Período</Label>
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Seleccionar período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day">Día</SelectItem>
+              <SelectItem value="week">Semana</SelectItem>
+              <SelectItem value="month">Mes</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="date-select">Fecha</Label>
+          <Input
+            id="date-select"
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+        <div className="flex items-end">
+          <Button 
+            variant="outline"
+            onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+          >
+            Hoy
+          </Button>
+        </div>
+      </div>
+
+      {/* Payments List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {payments.map((payment) => {
+          const patient = patients.find(p => p.id === payment.patient_id);
+          return (
+            <Card key={payment.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">
+                      ${payment.amount.toFixed(2)}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {patient ? `${patient.first_name} ${patient.last_name}` : 'Paciente no encontrado'}
+                    </p>
+                  </div>
+                  <Badge className="bg-green-100 text-green-800">
+                    {payment.status === 'completed' ? 'Completado' : 'Pendiente'}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  <p className="text-sm text-gray-600">
+                    <strong>Fecha de pago:</strong> {new Date(payment.payment_date).toLocaleDateString('es-ES')}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    <strong>Fecha de sesión:</strong> {new Date(payment.session_date).toLocaleDateString('es-ES')}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    <strong>Método:</strong> {payment.payment_method}
+                  </p>
+                  {payment.notes && (
+                    <p className="text-sm text-gray-600">
+                      <strong>Notas:</strong> {payment.notes}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {payments.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay pagos registrados</h3>
+            <p className="text-gray-500 mb-4">Registra tu primer pago para comenzar el seguimiento financiero</p>
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Registrar Pago
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <AddPaymentModal />
+    </div>
+  );
+};
+
 const useAuth = () => useContext(AuthContext);
 const useLanguage = () => useContext(LanguageContext);
 
