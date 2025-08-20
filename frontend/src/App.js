@@ -1753,6 +1753,8 @@ const MainApp = () => {
         return <PatientManagement />;
       case 'schedule':
         return <AppointmentManagement />;
+      case 'sessions':
+        return <SessionManagement />;
       case 'finances':
         return <FinanceManagement />;
       case 'settings':
