@@ -46,11 +46,32 @@ class UserRole(str, Enum):
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: EmailStr
-    full_name: str
+    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    username: Optional[str] = None
     role: str
     center_id: Optional[str] = None
+    phone: Optional[str] = None
+    specialization: Optional[str] = None
+    license_number: Optional[str] = None
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+    
+    @property
+    def display_name(self) -> str:
+        """Get display name from either full_name or first_name + last_name"""
+        if self.full_name:
+            return self.full_name
+        elif self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        elif self.username:
+            return self.username
+        else:
+            return self.email
 
 class UserCreate(BaseModel):
     email: EmailStr
