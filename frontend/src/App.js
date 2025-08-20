@@ -1391,7 +1391,7 @@ const LoginPage = () => {
   );
 };
 
-const Dashboard = () => {
+const Dashboard = ({ onNavigate }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [stats, setStats] = useState({
