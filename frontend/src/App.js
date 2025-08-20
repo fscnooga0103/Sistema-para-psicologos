@@ -1509,20 +1509,77 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Patients</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Pacientes Recientes</CardTitle>
+            <Button size="sm" onClick={() => window.location.hash = '#patients'}>
+              <Plus className="h-4 w-4 mr-1" />
+              Nuevo Paciente
+            </Button>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-500 text-sm">No recent patients to display</p>
+            {recentPatients.length > 0 ? (
+              <div className="space-y-3">
+                {recentPatients.map((patient) => (
+                  <div key={patient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {patient.first_name} {patient.last_name}
+                      </p>
+                      <p className="text-sm text-gray-500">{patient.email}</p>
+                    </div>
+                    <Badge variant={patient.is_active ? "default" : "secondary"}>
+                      {patient.is_active ? 'Activo' : 'Inactivo'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 mb-3">No hay pacientes registrados</p>
+                <Button size="sm" onClick={() => window.location.hash = '#patients'}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Agregar Primer Paciente
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Appointments</CardTitle>
+            <CardTitle>Citas de Hoy</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-500 text-sm">No upcoming appointments</p>
+            {todayAppointments.length > 0 ? (
+              <div className="space-y-3">
+                {todayAppointments.map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {appointment.appointment_time}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Paciente ID: {appointment.patient_id.slice(-8)}
+                      </p>
+                    </div>
+                    <Badge className={
+                      appointment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      appointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }>
+                      {appointment.status === 'scheduled' ? 'Programada' : 
+                       appointment.status === 'completed' ? 'Completada' : 'Cancelada'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">No hay citas programadas para hoy</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
