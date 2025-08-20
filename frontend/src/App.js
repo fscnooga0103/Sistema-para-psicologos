@@ -108,6 +108,8 @@ const translations = {
     patients: "Pacientes",
     schedule: "Agenda",
     finances: "Finanzas",
+    appointments: "Citas",
+    sessions: "Sesiones",
     settings: "Configuración",
     logout: "Cerrar Sesión",
     
