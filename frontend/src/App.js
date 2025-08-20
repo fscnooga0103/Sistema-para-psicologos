@@ -724,12 +724,33 @@ const SessionManagement = () => {
       target_date: ''
     });
 
+    useEffect(() => {
+      if (editingObjective) {
+        setFormData(editingObjective);
+      } else {
+        setFormData({
+          patient_id: '',
+          week_start_date: selectedWeek,
+          objective_title: '',
+          objective_description: '',
+          priority: 'medium',
+          target_date: ''
+        });
+      }
+    }, [editingObjective, selectedWeek]);
+
     const handleSubmit = async (e) => {
       e.preventDefault();
       try {
-        await axios.post(`${API}/session-objectives`, formData);
+        if (editingObjective) {
+          await axios.put(`${API}/session-objectives/${editingObjective.id}`, formData);
+        } else {
+          await axios.post(`${API}/session-objectives`, formData);
+        }
+        
         fetchObjectives();
         setShowAddModal(false);
+        setEditingObjective(null);
         setFormData({
           patient_id: '',
           week_start_date: selectedWeek,
@@ -739,7 +760,7 @@ const SessionManagement = () => {
           target_date: ''
         });
       } catch (error) {
-        console.error('Error creating objective:', error);
+        console.error('Error saving objective:', error);
       }
     };
 
@@ -747,12 +768,15 @@ const SessionManagement = () => {
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Nuevo Objetivo Semanal</DialogTitle>
+            <DialogTitle>{editingObjective ? 'Editar Objetivo Semanal' : 'Nuevo Objetivo Semanal'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="patient_id">Paciente</Label>
-              <Select onValueChange={(value) => setFormData({...formData, patient_id: value})}>
+              <Select 
+                value={formData.patient_id}
+                onValueChange={(value) => setFormData({...formData, patient_id: value})}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar paciente" />
                 </SelectTrigger>
@@ -788,7 +812,10 @@ const SessionManagement = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="priority">Prioridad</Label>
-                <Select onValueChange={(value) => setFormData({...formData, priority: value})}>
+                <Select 
+                  value={formData.priority}
+                  onValueChange={(value) => setFormData({...formData, priority: value})}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar prioridad" />
                   </SelectTrigger>
@@ -810,10 +837,17 @@ const SessionManagement = () => {
               </div>
             </div>
             <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingObjective(null);
+                }}
+              >
                 Cancelar
               </Button>
-              <Button type="submit">Guardar</Button>
+              <Button type="submit">{editingObjective ? 'Actualizar' : 'Guardar'}</Button>
             </div>
           </form>
         </DialogContent>
