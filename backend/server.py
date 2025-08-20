@@ -790,6 +790,112 @@ async def delete_appointment(appointment_id: str, current_user: User = Depends(g
     await db.appointments.delete_one({"id": appointment_id})
     return {"message": "Appointment deleted successfully"}
 
+# Session Objectives endpoints
+@api_router.post("/session-objectives", response_model=SessionObjective)
+async def create_session_objective(objective: SessionObjectiveCreate, current_user: User = Depends(get_current_user)):
+    # Verify patient exists and user has access
+    patient = await db.patients.find_one({"id": objective.patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Check permissions
+    if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    objective_dict = objective.dict()
+    objective_dict["created_by"] = current_user.id
+    
+    objective_obj = SessionObjective(**objective_dict)
+    await db.session_objectives.insert_one(objective_obj.dict())
+    return objective_obj
+
+@api_router.get("/session-objectives", response_model=List[SessionObjective])
+async def get_session_objectives(
+    patient_id: Optional[str] = None,
+    week_start_date: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    query = {}
+    
+    # Patient filtering with permission check
+    if patient_id:
+        patient = await db.patients.find_one({"id": patient_id})
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
+        
+        # Check permissions
+        if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+           (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        query["patient_id"] = patient_id
+    else:
+        # Get objectives for all accessible patients
+        if current_user.role == UserRole.PSYCHOLOGIST:
+            accessible_patients = await db.patients.find({"psychologist_id": current_user.id}).to_list(1000)
+        elif current_user.role == UserRole.CENTER_ADMIN:
+            accessible_patients = await db.patients.find({"center_id": current_user.center_id}).to_list(1000)
+        else:  # Super admin
+            accessible_patients = await db.patients.find().to_list(1000)
+        
+        patient_ids = [p["id"] for p in accessible_patients]
+        query["patient_id"] = {"$in": patient_ids}
+    
+    # Additional filters
+    if week_start_date:
+        query["week_start_date"] = week_start_date
+    if status:
+        query["status"] = status
+    
+    objectives = await db.session_objectives.find(query).sort("created_at", -1).to_list(1000)
+    return [SessionObjective(**obj) for obj in objectives]
+
+@api_router.put("/session-objectives/{objective_id}", response_model=SessionObjective)
+async def update_session_objective(objective_id: str, update_data: SessionObjectiveUpdate, current_user: User = Depends(get_current_user)):
+    objective = await db.session_objectives.find_one({"id": objective_id})
+    if not objective:
+        raise HTTPException(status_code=404, detail="Session objective not found")
+    
+    # Check permissions through patient
+    patient = await db.patients.find_one({"id": objective["patient_id"]})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    update_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.session_objectives.update_one(
+        {"id": objective_id},
+        {"$set": update_dict}
+    )
+    
+    updated_objective = await db.session_objectives.find_one({"id": objective_id})
+    return SessionObjective(**updated_objective)
+
+@api_router.delete("/session-objectives/{objective_id}")
+async def delete_session_objective(objective_id: str, current_user: User = Depends(get_current_user)):
+    objective = await db.session_objectives.find_one({"id": objective_id})
+    if not objective:
+        raise HTTPException(status_code=404, detail="Session objective not found")
+    
+    # Check permissions through patient
+    patient = await db.patients.find_one({"id": objective["patient_id"]})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.session_objectives.delete_one({"id": objective_id})
+    return {"message": "Session objective deleted successfully"}
+
 # Initialize Super Admin (for first setup)
 @api_router.post("/init/super-admin")
 async def create_initial_super_admin():
