@@ -978,6 +978,17 @@ const SessionManagement = () => {
                 </div>
 
                 <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingObjective(objective);
+                      setShowAddModal(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Editar
+                  </Button>
                   {objective.status === 'pending' && (
                     <Button
                       size="sm"
