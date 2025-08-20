@@ -1421,6 +1421,10 @@ const Sidebar = ({ isOpen, onClose, currentView, setCurrentView }) => {
     { icon: Calendar, label: t.schedule, view: "schedule" },
     { icon: TrendingUp, label: t.sessions, view: "sessions" },
     { icon: DollarSign, label: t.finances, view: "finances" },
+    // Only show user management for admins
+    ...(user && (user.role === 'super_admin' || user.role === 'center_admin') ? 
+      [{ icon: UserPlus, label: "Usuarios", view: "users" }] : []
+    ),
     { icon: Settings, label: t.settings, view: "settings" },
   ];
 
