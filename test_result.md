@@ -376,8 +376,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "React 19 Compatibility Issues"
-  stuck_tasks: []
+    - "Clinical History & Anamnesis System"
+  stuck_tasks:
+    - "Clinical History & Anamnesis System"
   test_all: false
   test_priority: "high_first"
 
