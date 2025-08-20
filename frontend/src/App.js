@@ -171,11 +171,14 @@ const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchCurrentUser();
+    } else {
+      setLoading(false);
     }
   }, [token]);
 
@@ -183,8 +186,14 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
+      setLoading(false);
     } catch (error) {
-      logout();
+      console.error('Error fetching current user:', error);
+      // If token is invalid or expired, logout
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        logout();
+      }
+      setLoading(false);
     }
   };
 
@@ -200,6 +209,7 @@ const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('Login error:', error);
       return { success: false, error: error.response?.data?.detail || 'Login failed' };
     }
   };
@@ -211,8 +221,37 @@ const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  // Add axios interceptor to handle expired tokens globally
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401 && token) {
+          console.warn('Token expired, logging out...');
+          logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [token]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user && !!token }}>
       {children}
     </AuthContext.Provider>
   );
