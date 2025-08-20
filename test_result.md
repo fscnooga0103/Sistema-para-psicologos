@@ -121,6 +121,21 @@ backend:
         agent: "testing"
         comment: "✅ TESTED: Authentication system working perfectly. Login with admin@psychologyportal.com/admin123 successful. JWT token generation and validation working. Role-based permissions verified."
 
+  - task: "User Creation & Management System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Complete user management system with CRUD operations for different roles"
+      - working: true
+        agent: "testing"
+        comment: "🎉 USER CREATION FUNCTIONALITY FULLY TESTED AND WORKING! Comprehensive testing completed as specifically requested: ✅ Login with admin@psychologyportal.com/admin123 successful (super_admin role) ✅ GET /api/users endpoint working - lists all users with proper role-based filtering ✅ POST /api/users successfully creates psychologist users with complete data (username, email, first_name, last_name, password, role, phone, specialization, license_number) ✅ POST /api/users successfully creates center_admin users (only super_admin can do this) ✅ Email duplication validation working - returns 400 error for duplicate emails ✅ Username duplication validation working - returns 400 error for duplicate usernames ✅ Required fields validation working - returns 422 for missing email/password ✅ PUT /api/users/{user_id} successfully updates user information ✅ Authentication and permission checks working correctly. Created 2 new users during testing: psychologist (Dr. Ana Martínez) and center_admin (Carlos Rodríguez). All validation rules enforced. User creation system is production-ready!"
+
   - task: "Patient Management System"
     implemented: true
     working: true
