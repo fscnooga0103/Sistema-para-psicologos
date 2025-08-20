@@ -3399,6 +3399,7 @@ const SettingsManagement = () => {
                 <TabsTrigger value="schedule">Schedule</TabsTrigger>
                 <TabsTrigger value="sessions">Sessions</TabsTrigger>
                 <TabsTrigger value="finances">Finances</TabsTrigger>
+                <TabsTrigger value="users">Users</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
             </div>
