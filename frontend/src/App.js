@@ -3068,7 +3068,7 @@ const SettingsManagement = () => {
               <FinanceManagement />
             </TabsContent>
             <TabsContent value="settings" className="m-0 h-full">
-              <div className="p-6"><h1 className="text-2xl">Settings (Coming Soon)</h1></div>
+              <SettingsManagement />
             </TabsContent>
           </Tabs>
         </main>
