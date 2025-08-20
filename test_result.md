@@ -138,9 +138,9 @@ backend:
 
   - task: "Clinical History & Anamnesis System"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -153,6 +153,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ RE-TESTED (User Request): Anamnesis functionality thoroughly tested per user request. Login successful with admin@psychologyportal.com/admin123. Retrieved 4 existing patients. Created comprehensive anamnesis with realistic psychology data for Juan Pérez (ID: 50528fe5-197f-40a1-90ec-4477684bf7f0). All endpoints working: POST /api/patients/{id}/anamnesis (create), GET /api/patients/{id}/anamnesis (retrieve), PUT /api/patients/{id}/anamnesis (update). Anamnesis correctly saved in patient record. Update functionality verified. All 13 required sections included and functional: general_data, consultation_motive, evolutionary_history, medical_history, neuromuscular_development, speech_history, habits_formation, conduct, play, educational_history, psychosexuality, parental_attitudes, family_history, interview_observations. System is fully operational."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE FOUND (User Report Confirmed): Anamnesis creation functionality has authentication/session management problems. During comprehensive UI testing, login with admin@psychologyportal.com/admin123 initially works and dashboard loads showing 4 patients (Juan Pérez, Rene Montalvo, Edgar Rodriguez). However, session expires unexpectedly during navigation, preventing access to patient management and anamnesis functionality. Backend endpoints are responding correctly (verified with curl), but frontend authentication state is not persistent. This confirms user's report that anamnesis creation is not working. Issue appears to be in frontend authentication/session management rather than anamnesis form itself. AnamnesisForm component exists and is properly implemented with all 13 sections, but users cannot reach it due to authentication issues."
 
   - task: "Evaluations & Diagnosis System"
     implemented: true
