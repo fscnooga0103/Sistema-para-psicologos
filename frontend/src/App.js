@@ -218,6 +218,298 @@ const AuthProvider = ({ children }) => {
   );
 };
 
+const AppointmentManagement = () => {
+  const { t } = useLanguage();
+  const [appointments, setAppointments] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+
+  useEffect(() => {
+    fetchAppointments();
+    fetchPatients();
+  }, [selectedDate]);
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await axios.get(`${API}/appointments?start_date=${selectedDate}&end_date=${selectedDate}`);
+      setAppointments(response.data);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      const response = await axios.get(`${API}/patients`);
+      setPatients(response.data);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
+
+  const AddAppointmentModal = () => {
+    const [formData, setFormData] = useState({
+      patient_id: '',
+      appointment_date: selectedDate,
+      appointment_time: '10:00',
+      duration_minutes: 60,
+      appointment_type: 'consultation',
+      notes: '',
+      session_objectives: []
+    });
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await axios.post(`${API}/appointments`, formData);
+        fetchAppointments();
+        setShowAddModal(false);
+        setFormData({
+          patient_id: '',
+          appointment_date: selectedDate,
+          appointment_time: '10:00',
+          duration_minutes: 60,
+          appointment_type: 'consultation',
+          notes: '',
+          session_objectives: []
+        });
+      } catch (error) {
+        console.error('Error creating appointment:', error);
+      }
+    };
+
+    return (
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nueva Cita</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="patient_id">Paciente</Label>
+              <Select onValueChange={(value) => setFormData({...formData, patient_id: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar paciente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.first_name} {patient.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="appointment_date">Fecha</Label>
+              <Input
+                id="appointment_date"
+                type="date"
+                value={formData.appointment_date}
+                onChange={(e) => setFormData({...formData, appointment_date: e.target.value})}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="appointment_time">Hora</Label>
+                <Input
+                  id="appointment_time"
+                  type="time"
+                  value={formData.appointment_time}
+                  onChange={(e) => setFormData({...formData, appointment_time: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="duration">Duración (min)</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  value={formData.duration_minutes}
+                  onChange={(e) => setFormData({...formData, duration_minutes: parseInt(e.target.value)})}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="appointment_type">Tipo de Cita</Label>
+              <Select onValueChange={(value) => setFormData({...formData, appointment_type: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tipo de cita" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="consultation">Consulta</SelectItem>
+                  <SelectItem value="therapy">Terapia</SelectItem>
+                  <SelectItem value="evaluation">Evaluación</SelectItem>
+                  <SelectItem value="follow_up">Seguimiento</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="notes">Notas</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                placeholder="Notas de la cita..."
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  const formatAppointmentType = (type) => {
+    const types = {
+      consultation: "Consulta",
+      therapy: "Terapia", 
+      evaluation: "Evaluación",
+      follow_up: "Seguimiento"
+    };
+    return types[type] || type;
+  };
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'no_show': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  if (loading) {
+    return <div className="p-6">Cargando...</div>;
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Gestión de Citas</h1>
+        <Button onClick={() => setShowAddModal(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nueva Cita
+        </Button>
+      </div>
+
+      <div className="flex items-center space-x-4 mb-6">
+        <div>
+          <Label htmlFor="date-select">Seleccionar Fecha</Label>
+          <Input
+            id="date-select"
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+        <div className="flex items-end">
+          <Button 
+            variant="outline"
+            onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+          >
+            Hoy
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {appointments.map((appointment) => {
+          const patient = patients.find(p => p.id === appointment.patient_id);
+          return (
+            <Card key={appointment.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">
+                      {patient ? `${patient.first_name} ${patient.last_name}` : 'Paciente no encontrado'}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {appointment.appointment_time} - {formatAppointmentType(appointment.appointment_type)}
+                    </p>
+                  </div>
+                  <Badge className={getStatusColor(appointment.status)}>
+                    {appointment.status === 'scheduled' ? 'Programada' : 
+                     appointment.status === 'completed' ? 'Completada' :
+                     appointment.status === 'cancelled' ? 'Cancelada' : 'No Asistió'}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  <p className="text-sm text-gray-600">
+                    <strong>Duración:</strong> {appointment.duration_minutes} min
+                  </p>
+                  {appointment.notes && (
+                    <p className="text-sm text-gray-600">
+                      <strong>Notas:</strong> {appointment.notes}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedAppointment(appointment)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Ver
+                  </Button>
+                  {appointment.status === 'scheduled' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await axios.put(`${API}/appointments/${appointment.id}`, { status: 'completed' });
+                          fetchAppointments();
+                        } catch (error) {
+                          console.error('Error updating appointment:', error);
+                        }
+                      }}
+                    >
+                      Completar
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {appointments.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay citas para esta fecha</h3>
+            <p className="text-gray-500 mb-4">Programa una nueva cita para comenzar</p>
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nueva Cita
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <AddAppointmentModal />
+    </div>
+  );
+};
+
 const useAuth = () => useContext(AuthContext);
 const useLanguage = () => useContext(LanguageContext);
 
