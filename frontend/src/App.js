@@ -2146,7 +2146,7 @@ const PatientManagement = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900">Evaluaciones</h3>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={() => setShowEvaluationModal(true)}>
                   <Plus className="h-4 w-4 mr-1" />
                   Nueva
                 </Button>
@@ -2159,7 +2159,19 @@ const PatientManagement = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between items-start">
                           <h4 className="font-medium text-gray-900">{evaluation.evaluation_type}</h4>
-                          <span className="text-xs text-gray-500">{evaluation.evaluation_date}</span>
+                          <div className="flex space-x-1">
+                            <span className="text-xs text-gray-500">{evaluation.evaluation_date}</span>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingEvaluation(evaluation);
+                                setShowEvaluationModal(true);
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                         <p className="text-sm text-gray-600">{evaluation.notes}</p>
                       </div>
@@ -2169,8 +2181,10 @@ const PatientManagement = () => {
               ) : (
                 <div className="text-center py-8">
                   <ClipboardList className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No hay evaluaciones registradas</p>
-                  <Button size="sm" className="mt-2">Agregar Evaluación</Button>
+                  <p className="text-gray-500 mb-3">No hay evaluaciones registradas</p>
+                  <Button size="sm" onClick={() => setShowEvaluationModal(true)}>
+                    Agregar Evaluación
+                  </Button>
                 </div>
               )}
             </div>
