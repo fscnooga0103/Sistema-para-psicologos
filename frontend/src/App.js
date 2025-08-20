@@ -34,7 +34,8 @@ import {
   DollarSign,
   Eye,
   Edit,
-  Gamepad2
+  Gamepad2,
+  Lock
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
