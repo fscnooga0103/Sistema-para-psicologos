@@ -2682,6 +2682,10 @@ const MainApp = () => {
         return <SessionManagement />;
       case 'finances':
         return <FinanceManagement />;
+      case 'users':
+        return <UserManagement />;
+      case 'settings':
+        return <SettingsManagement />;
 const UserManagement = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
