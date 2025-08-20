@@ -522,10 +522,28 @@ const AppointmentManagement = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Gestión de Citas</h1>
-        <Button onClick={() => setShowAddModal(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Cita
-        </Button>
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+            >
+              Vista Tarjetas
+            </Button>
+            <Button 
+              variant={viewMode === 'timeline' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('timeline')}
+            >
+              Vista Cronograma
+            </Button>
+          </div>
+          <Button onClick={() => setShowAddModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Cita
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center space-x-4 mb-6">
@@ -549,83 +567,90 @@ const AppointmentManagement = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {appointments.map((appointment) => {
-          const patient = patients.find(p => p.id === appointment.patient_id);
-          return (
-            <Card key={appointment.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">
-                      {patient ? `${patient.first_name} ${patient.last_name}` : 'Paciente no encontrado'}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      {appointment.appointment_time} - {formatAppointmentType(appointment.appointment_type)}
-                    </p>
-                  </div>
-                  <Badge className={getStatusColor(appointment.status)}>
-                    {appointment.status === 'scheduled' ? 'Programada' : 
-                     appointment.status === 'completed' ? 'Completada' :
-                     appointment.status === 'cancelled' ? 'Cancelada' : 'No Asistió'}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-2 mb-4">
-                  <p className="text-sm text-gray-600">
-                    <strong>Duración:</strong> {appointment.duration_minutes} min
-                  </p>
-                  {appointment.notes && (
-                    <p className="text-sm text-gray-600">
-                      <strong>Notas:</strong> {appointment.notes}
-                    </p>
-                  )}
-                </div>
+      {/* Render based on view mode */}
+      {viewMode === 'timeline' ? (
+        <TimelineView />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {appointments.map((appointment) => {
+              const patient = patients.find(p => p.id === appointment.patient_id);
+              return (
+                <Card key={appointment.id} className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="font-semibold text-lg text-gray-900">
+                          {patient ? `${patient.first_name} ${patient.last_name}` : 'Paciente no encontrado'}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {appointment.appointment_time} - {formatAppointmentType(appointment.appointment_type)}
+                        </p>
+                      </div>
+                      <Badge className={getStatusColor(appointment.status)}>
+                        {appointment.status === 'scheduled' ? 'Programada' : 
+                         appointment.status === 'completed' ? 'Completada' :
+                         appointment.status === 'cancelled' ? 'Cancelada' : 'No Asistió'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-2 mb-4">
+                      <p className="text-sm text-gray-600">
+                        <strong>Duración:</strong> {appointment.duration_minutes} min
+                      </p>
+                      {appointment.notes && (
+                        <p className="text-sm text-gray-600">
+                          <strong>Notas:</strong> {appointment.notes}
+                        </p>
+                      )}
+                    </div>
 
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedAppointment(appointment)}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Ver
-                  </Button>
-                  {appointment.status === 'scheduled' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={async () => {
-                        try {
-                          await axios.put(`${API}/appointments/${appointment.id}`, { status: 'completed' });
-                          fetchAppointments();
-                        } catch (error) {
-                          console.error('Error updating appointment:', error);
-                        }
-                      }}
-                    >
-                      Completar
-                    </Button>
-                  )}
-                </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSelectedAppointment(appointment)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Ver
+                      </Button>
+                      {appointment.status === 'scheduled' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await axios.put(`${API}/appointments/${appointment.id}`, { status: 'completed' });
+                              fetchAppointments();
+                            } catch (error) {
+                              console.error('Error updating appointment:', error);
+                            }
+                          }}
+                        >
+                          Completar
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {appointments.length === 0 && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No hay citas para esta fecha</h3>
+                <p className="text-gray-500 mb-4">Programa una nueva cita para comenzar</p>
+                <Button onClick={() => setShowAddModal(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nueva Cita
+                </Button>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
-
-      {appointments.length === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay citas para esta fecha</h3>
-            <p className="text-gray-500 mb-4">Programa una nueva cita para comenzar</p>
-            <Button onClick={() => setShowAddModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Cita
-            </Button>
-          </CardContent>
-        </Card>
+          )}
+        </>
       )}
 
       <AddAppointmentModal />
