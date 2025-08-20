@@ -281,6 +281,97 @@ class ProgressNote(BaseModel):
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Appointment Models
+class Appointment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    psychologist_id: str
+    appointment_date: str  # YYYY-MM-DD
+    appointment_time: str  # HH:MM
+    duration_minutes: int = 60
+    appointment_type: str = "consultation"  # consultation, therapy, evaluation
+    status: str = "scheduled"  # scheduled, completed, cancelled, no_show
+    notes: Optional[str] = None
+    session_objectives: List[str] = []
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class AppointmentCreate(BaseModel):
+    patient_id: str
+    appointment_date: str
+    appointment_time: str
+    duration_minutes: int = 60
+    appointment_type: str = "consultation"
+    notes: Optional[str] = None
+    session_objectives: List[str] = []
+
+class AppointmentUpdate(BaseModel):
+    appointment_date: Optional[str] = None
+    appointment_time: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    appointment_type: Optional[str] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    session_objectives: List[str] = []
+
+# Session Objectives Models
+class SessionObjective(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    appointment_id: Optional[str] = None
+    week_start_date: str  # YYYY-MM-DD (Monday of the week)
+    objective_title: str
+    objective_description: str
+    status: str = "pending"  # pending, in_progress, completed, cancelled
+    priority: str = "medium"  # low, medium, high
+    target_date: Optional[str] = None
+    completion_notes: Optional[str] = None
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SessionObjectiveCreate(BaseModel):
+    patient_id: str
+    appointment_id: Optional[str] = None
+    week_start_date: str
+    objective_title: str
+    objective_description: str
+    priority: str = "medium"
+    target_date: Optional[str] = None
+
+class SessionObjectiveUpdate(BaseModel):
+    objective_title: Optional[str] = None
+    objective_description: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    target_date: Optional[str] = None
+    completion_notes: Optional[str] = None
+
+# Payment Models
+class Payment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    appointment_id: Optional[str] = None
+    psychologist_id: str
+    amount: float
+    payment_date: str  # YYYY-MM-DD
+    session_date: str  # YYYY-MM-DD
+    payment_method: Optional[str] = None  # cash, card, transfer, etc.
+    status: str = "completed"  # pending, completed, cancelled
+    notes: Optional[str] = None
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class PaymentCreate(BaseModel):
+    patient_id: str
+    appointment_id: Optional[str] = None
+    amount: float
+    payment_date: str
+    session_date: str
+    payment_method: Optional[str] = None
+    notes: Optional[str] = None
+
 # Helper functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
