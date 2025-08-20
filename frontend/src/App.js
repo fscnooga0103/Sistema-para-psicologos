@@ -1971,6 +1971,16 @@ const PatientManagement = () => {
                 <Button
                   size="sm"
                   variant="outline"
+                  onClick={() => openPatientSidebar(patient)}
+                  className="flex items-center space-x-1"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span>Ver Detalles</span>
+                </Button>
+                
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleOpenAnamnesis(patient)}
                   className="flex items-center space-x-1"
                 >
