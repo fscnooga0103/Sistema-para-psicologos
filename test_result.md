@@ -249,16 +249,16 @@ frontend:
         comment: "Patient list, add patient modal, and anamnesis form integration working"
 
   - task: "Retractable Sidebar for Patient Details"
-    implemented: false
-    working: "NA"
-    file: "NOT_CREATED"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "medium"
     needs_retesting: true
     status_history:
-      - working: false
+      - working: true
         agent: "main"
-        comment: "Patient detail view with retractable sidebar for evaluations, diagnosis, and notes needs implementation"
+        comment: "Complete retractable sidebar implemented with 4 tabs: General info, Evaluations, Diagnosis, and Notes. Includes patient data visualization, note-taking, and progress tracking features."
 
   - task: "Appointment/Agenda UI"
     implemented: true
