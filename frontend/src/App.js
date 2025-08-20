@@ -1400,9 +1400,12 @@ const Dashboard = () => {
     appointmentsToday: 0,
     monthlyRevenue: 0
   });
+  const [recentPatients, setRecentPatients] = useState([]);
+  const [todayAppointments, setTodayAppointments] = useState([]);
 
   useEffect(() => {
     fetchStats();
+    fetchRecentData();
   }, []);
 
   const fetchStats = async () => {
@@ -1425,6 +1428,25 @@ const Dashboard = () => {
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchRecentData = async () => {
+    try {
+      const [patientsResponse, appointmentsResponse] = await Promise.all([
+        axios.get(`${API}/patients`),
+        axios.get(`${API}/appointments?start_date=${new Date().toISOString().split('T')[0]}&end_date=${new Date().toISOString().split('T')[0]}`)
+      ]);
+      
+      // Get 3 most recent patients
+      const sortedPatients = patientsResponse.data
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 3);
+      
+      setRecentPatients(sortedPatients);
+      setTodayAppointments(appointmentsResponse.data.slice(0, 5)); // Show max 5 appointments
+    } catch (error) {
+      console.error('Error fetching recent data:', error);
     }
   };
 
