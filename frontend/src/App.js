@@ -666,6 +666,7 @@ const SessionManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState('all');
+  const [editingObjective, setEditingObjective] = useState(null);
 
   function getWeekStart(date) {
     const d = new Date(date);
