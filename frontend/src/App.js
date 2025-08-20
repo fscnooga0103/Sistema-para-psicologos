@@ -2227,7 +2227,7 @@ const MainApp = () => {
       case 'settings':
         return <div className="p-6"><h1 className="text-2xl">Settings (Coming Soon)</h1></div>;
       default:
-        return <Dashboard />;
+        return <Dashboard onNavigate={setCurrentView} />;
     }
   };
 
