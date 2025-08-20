@@ -2117,6 +2117,112 @@ const PatientManagement = () => {
     );
   };
 
+  // Timeline View Component
+  const TimelineView = () => {
+    const timeSlots = generateTimeSlots();
+    
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card className="border-l-4 border-l-blue-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total de Citas</p>
+                  <p className="text-2xl font-bold text-gray-900">{appointments.length}</p>
+                </div>
+                <Calendar className="h-8 w-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-green-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Completadas</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {appointments.filter(apt => apt.status === 'completed').length}
+                  </p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-orange-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Pendientes</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {appointments.filter(apt => apt.status === 'scheduled').length}
+                  </p>
+                </div>
+                <Users className="h-8 w-8 text-orange-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Cronograma del Día</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {timeSlots.map((slot) => (
+                <div 
+                  key={slot.time}
+                  className={`flex items-center p-3 rounded-lg border ${
+                    slot.appointment 
+                      ? 'bg-blue-50 border-blue-200' 
+                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                  } transition-colors cursor-pointer`}
+                  onClick={() => {
+                    if (!slot.appointment) {
+                      // Auto-fill time in modal when clicking empty slot
+                      setShowAddModal(true);
+                    }
+                  }}
+                >
+                  <div className="w-20 text-sm font-medium text-gray-600">
+                    {slot.displayTime}
+                  </div>
+                  
+                  {slot.appointment ? (
+                    <div className="flex-1 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {(() => {
+                            const patient = patients.find(p => p.id === slot.appointment.patient_id);
+                            return patient ? `${patient.first_name} ${patient.last_name}` : 'Paciente desconocido';
+                          })()}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {formatAppointmentType(slot.appointment.appointment_type)} - {slot.appointment.duration_minutes} min
+                        </p>
+                      </div>
+                      <Badge className={getStatusColor(slot.appointment.status)}>
+                        {slot.appointment.status === 'scheduled' ? 'Programada' : 
+                         slot.appointment.status === 'completed' ? 'Completada' :
+                         slot.appointment.status === 'cancelled' ? 'Cancelada' : 'No Asistió'}
+                      </Badge>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex items-center">
+                      <p className="text-gray-400 text-sm">Disponible - Clic para agregar cita</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
   // Patient Sidebar Component
   const PatientSidebar = () => {
     if (!selectedPatient) return null;
