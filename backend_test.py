@@ -614,6 +614,377 @@ class PsychologyPortalAPITester:
         print("✅ Anamnesis error handling tests passed!")
         return True
 
+    def test_appointments_apis(self):
+        """Test all appointment-related APIs"""
+        print("\n" + "="*50)
+        print("📅 TESTING APPOINTMENTS APIs")
+        print("="*50)
+        
+        if not self.patient_id:
+            print("❌ No patient ID available for appointment testing")
+            return False
+
+        # Test 1: Create appointment
+        appointment_data = {
+            "patient_id": self.patient_id,
+            "appointment_date": "2024-02-15",
+            "appointment_time": "10:00",
+            "duration_minutes": 60,
+            "appointment_type": "therapy",
+            "notes": "Sesión de terapia cognitivo-conductual",
+            "session_objectives": [
+                "Trabajar técnicas de relajación",
+                "Revisar tareas de la semana anterior"
+            ]
+        }
+        
+        success, response = self.run_test(
+            "Create Appointment (POST)",
+            "POST",
+            "appointments",
+            200,
+            data=appointment_data
+        )
+        
+        if not success:
+            print("❌ Failed to create appointment")
+            return False
+        
+        appointment_id = response.get('id')
+        if not appointment_id:
+            print("❌ No appointment ID returned")
+            return False
+
+        # Test 2: Get all appointments
+        success, response = self.run_test(
+            "Get All Appointments (GET)",
+            "GET",
+            "appointments",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get appointments")
+            return False
+        
+        print(f"   Found {len(response)} appointments")
+
+        # Test 3: Get specific appointment
+        success, response = self.run_test(
+            "Get Specific Appointment (GET)",
+            "GET",
+            f"appointments/{appointment_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get specific appointment")
+            return False
+
+        # Test 4: Update appointment
+        update_data = {
+            "appointment_time": "11:00",
+            "status": "completed",
+            "notes": "Sesión completada exitosamente"
+        }
+        
+        success, response = self.run_test(
+            "Update Appointment (PUT)",
+            "PUT",
+            f"appointments/{appointment_id}",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            print("❌ Failed to update appointment")
+            return False
+
+        # Test 5: Get appointments with filters
+        success, response = self.run_test(
+            "Get Appointments with Patient Filter",
+            "GET",
+            f"appointments?patient_id={self.patient_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get filtered appointments")
+            return False
+
+        print("🎉 All appointment API tests passed!")
+        return True
+
+    def test_session_objectives_apis(self):
+        """Test all session objectives APIs"""
+        print("\n" + "="*50)
+        print("🎯 TESTING SESSION OBJECTIVES APIs")
+        print("="*50)
+        
+        if not self.patient_id:
+            print("❌ No patient ID available for session objectives testing")
+            return False
+
+        # Test 1: Create session objective
+        objective_data = {
+            "patient_id": self.patient_id,
+            "week_start_date": "2024-02-12",  # Monday
+            "objective_title": "Reducir ansiedad matutina",
+            "objective_description": "Implementar técnicas de respiración profunda cada mañana durante 10 minutos",
+            "priority": "high",
+            "target_date": "2024-02-18"
+        }
+        
+        success, response = self.run_test(
+            "Create Session Objective (POST)",
+            "POST",
+            "session-objectives",
+            200,
+            data=objective_data
+        )
+        
+        if not success:
+            print("❌ Failed to create session objective")
+            return False
+        
+        objective_id = response.get('id')
+        if not objective_id:
+            print("❌ No objective ID returned")
+            return False
+
+        # Test 2: Create another objective
+        objective_data2 = {
+            "patient_id": self.patient_id,
+            "week_start_date": "2024-02-12",
+            "objective_title": "Mejorar patrones de sueño",
+            "objective_description": "Establecer rutina de sueño consistente, acostarse a las 10 PM",
+            "priority": "medium",
+            "target_date": "2024-02-25"
+        }
+        
+        success, response = self.run_test(
+            "Create Second Session Objective (POST)",
+            "POST",
+            "session-objectives",
+            200,
+            data=objective_data2
+        )
+        
+        if not success:
+            print("❌ Failed to create second session objective")
+            return False
+
+        # Test 3: Get all session objectives
+        success, response = self.run_test(
+            "Get All Session Objectives (GET)",
+            "GET",
+            "session-objectives",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get session objectives")
+            return False
+        
+        print(f"   Found {len(response)} session objectives")
+
+        # Test 4: Get objectives for specific patient
+        success, response = self.run_test(
+            "Get Objectives for Patient",
+            "GET",
+            f"session-objectives?patient_id={self.patient_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get patient objectives")
+            return False
+
+        # Test 5: Update objective status
+        update_data = {
+            "status": "completed",
+            "completion_notes": "Objetivo completado exitosamente. Paciente reporta mejora significativa."
+        }
+        
+        success, response = self.run_test(
+            "Update Session Objective (PUT)",
+            "PUT",
+            f"session-objectives/{objective_id}",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            print("❌ Failed to update session objective")
+            return False
+
+        # Test 6: Get objectives by week
+        success, response = self.run_test(
+            "Get Objectives by Week",
+            "GET",
+            "session-objectives?week_start_date=2024-02-12",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get objectives by week")
+            return False
+
+        print("🎉 All session objectives API tests passed!")
+        return True
+
+    def test_payments_apis(self):
+        """Test all payment-related APIs"""
+        print("\n" + "="*50)
+        print("💰 TESTING PAYMENTS APIs")
+        print("="*50)
+        
+        if not self.patient_id:
+            print("❌ No patient ID available for payment testing")
+            return False
+
+        # Test 1: Create payment
+        payment_data = {
+            "patient_id": self.patient_id,
+            "amount": 150.00,
+            "payment_date": "2024-02-15",
+            "session_date": "2024-02-15",
+            "payment_method": "efectivo",
+            "notes": "Pago por sesión de terapia individual"
+        }
+        
+        success, response = self.run_test(
+            "Create Payment (POST)",
+            "POST",
+            "payments",
+            200,
+            data=payment_data
+        )
+        
+        if not success:
+            print("❌ Failed to create payment")
+            return False
+        
+        payment_id = response.get('id')
+        if not payment_id:
+            print("❌ No payment ID returned")
+            return False
+
+        # Test 2: Create additional payments for stats testing
+        payments_data = [
+            {
+                "patient_id": self.patient_id,
+                "amount": 150.00,
+                "payment_date": "2024-02-14",
+                "session_date": "2024-02-14",
+                "payment_method": "tarjeta",
+                "notes": "Pago por sesión anterior"
+            },
+            {
+                "patient_id": self.patient_id,
+                "amount": 175.00,
+                "payment_date": "2024-02-13",
+                "session_date": "2024-02-13",
+                "payment_method": "transferencia",
+                "notes": "Pago por evaluación inicial"
+            }
+        ]
+        
+        for i, payment in enumerate(payments_data):
+            success, response = self.run_test(
+                f"Create Additional Payment {i+1}",
+                "POST",
+                "payments",
+                200,
+                data=payment
+            )
+            if not success:
+                print(f"❌ Failed to create additional payment {i+1}")
+
+        # Test 3: Get all payments
+        success, response = self.run_test(
+            "Get All Payments (GET)",
+            "GET",
+            "payments",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get payments")
+            return False
+        
+        print(f"   Found {len(response)} payments")
+
+        # Test 4: Get payments with date filter
+        success, response = self.run_test(
+            "Get Payments with Date Filter",
+            "GET",
+            "payments?start_date=2024-02-13&end_date=2024-02-15",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get filtered payments")
+            return False
+
+        # Test 5: Get payments for specific patient
+        success, response = self.run_test(
+            "Get Payments for Patient",
+            "GET",
+            f"payments?patient_id={self.patient_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get patient payments")
+            return False
+
+        # Test 6: Get payment statistics
+        success, response = self.run_test(
+            "Get Payment Statistics (GET)",
+            "GET",
+            "payments/stats",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get payment statistics")
+            return False
+        
+        # Verify stats structure
+        expected_keys = ['daily_total', 'weekly_total', 'monthly_total', 'total_payments', 'average_per_session']
+        if all(key in response for key in expected_keys):
+            print("✅ Payment statistics structure is correct")
+            print(f"   Daily total: ${response.get('daily_total', 0)}")
+            print(f"   Weekly total: ${response.get('weekly_total', 0)}")
+            print(f"   Monthly total: ${response.get('monthly_total', 0)}")
+            print(f"   Total payments: {response.get('total_payments', 0)}")
+            print(f"   Average per session: ${response.get('average_per_session', 0)}")
+        else:
+            print("❌ Payment statistics structure is incorrect")
+            return False
+
+        # Test 7: Update payment
+        update_data = {
+            "amount": 160.00,
+            "notes": "Pago actualizado - incluye descuento por puntualidad"
+        }
+        
+        success, response = self.run_test(
+            "Update Payment (PUT)",
+            "PUT",
+            f"payments/{payment_id}",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            print("❌ Failed to update payment")
+            return False
+
+        print("🎉 All payment API tests passed!")
+        return True
+
 def main():
     print("🏥 Psychology Practice Management System - API Testing")
     print("=" * 60)
