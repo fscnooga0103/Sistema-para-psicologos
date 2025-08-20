@@ -379,9 +379,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Clinical History & Anamnesis System"
-  stuck_tasks:
-    - "Clinical History & Anamnesis System"
+    - "All systems operational"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
