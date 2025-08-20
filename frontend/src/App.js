@@ -1225,6 +1225,7 @@ const Sidebar = ({ isOpen, onClose, currentView, setCurrentView }) => {
     { icon: FileText, label: t.dashboard, view: "dashboard" },
     { icon: Users, label: t.patients, view: "patients" },
     { icon: Calendar, label: t.schedule, view: "schedule" },
+    { icon: TrendingUp, label: t.sessions, view: "sessions" },
     { icon: DollarSign, label: t.finances, view: "finances" },
     { icon: Settings, label: t.settings, view: "settings" },
   ];
