@@ -548,6 +548,27 @@ async def get_patient(patient_id: str, current_user: User = Depends(get_current_
     
     return Patient(**patient)
 
+@api_router.put("/patients/{patient_id}", response_model=Patient)
+async def update_patient(patient_id: str, update_data: dict, current_user: User = Depends(get_current_user)):
+    patient = await db.patients.find_one({"id": patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Check permissions
+    if (current_user.role == UserRole.PSYCHOLOGIST and patient["psychologist_id"] != current_user.id) or \
+       (current_user.role == UserRole.CENTER_ADMIN and patient["center_id"] != current_user.center_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Update patient data
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    await db.patients.update_one(
+        {"id": patient_id},
+        {"$set": update_data}
+    )
+    
+    updated_patient = await db.patients.find_one({"id": patient_id})
+    return Patient(**updated_patient)
+
 # Anamnesis endpoints
 @api_router.post("/patients/{patient_id}/anamnesis")
 async def create_anamnesis(patient_id: str, anamnesis_data: AnamnesisCreate, current_user: User = Depends(get_current_user)):
