@@ -150,6 +150,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Comprehensive anamnesis system working perfectly. All sections tested: general_data, consultation_motive, evolutionary_history, medical_history, neuromuscular_development, speech_history, habits_formation, conduct, play, educational_history, psychosexuality, parental_attitudes, family_history. CRUD operations all successful."
+      - working: true
+        agent: "testing"
+        comment: "✅ RE-TESTED (User Request): Anamnesis functionality thoroughly tested per user request. Login successful with admin@psychologyportal.com/admin123. Retrieved 4 existing patients. Created comprehensive anamnesis with realistic psychology data for Juan Pérez (ID: 50528fe5-197f-40a1-90ec-4477684bf7f0). All endpoints working: POST /api/patients/{id}/anamnesis (create), GET /api/patients/{id}/anamnesis (retrieve), PUT /api/patients/{id}/anamnesis (update). Anamnesis correctly saved in patient record. Update functionality verified. All 13 required sections included and functional: general_data, consultation_motive, evolutionary_history, medical_history, neuromuscular_development, speech_history, habits_formation, conduct, play, educational_history, psychosexuality, parental_attitudes, family_history, interview_observations. System is fully operational."
 
   - task: "Evaluations & Diagnosis System"
     implemented: true
