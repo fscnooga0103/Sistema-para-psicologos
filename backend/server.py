@@ -1042,6 +1042,135 @@ async def delete_payment(payment_id: str, current_user: User = Depends(get_curre
     await db.payments.delete_one({"id": payment_id})
     return {"message": "Payment deleted successfully"}
 
+# User Management endpoints (for admin users)
+@api_router.get("/users", response_model=List[User])
+async def get_users(current_user: User = Depends(get_current_user)):
+    # Only super_admin and center_admin can view users
+    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    query = {}
+    if current_user.role == UserRole.CENTER_ADMIN:
+        # Center admin can only see users from their center
+        query["center_id"] = current_user.center_id
+    
+    users = await db.users.find(query).to_list(1000)
+    return [User(**user) for user in users]
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    first_name: str
+    last_name: str
+    password: str
+    role: UserRole
+    center_id: Optional[str] = None
+    phone: Optional[str] = None
+    specialization: Optional[str] = None
+    license_number: Optional[str] = None
+
+@api_router.post("/users", response_model=User)
+async def create_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
+    # Only super_admin and center_admin can create users
+    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Check if username or email already exists
+    existing_user = await db.users.find_one({
+        "$or": [
+            {"username": user_data.username},
+            {"email": user_data.email}
+        ]
+    })
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username or email already exists")
+    
+    # Hash password
+    hashed_password = pwd_context.hash(user_data.password)
+    
+    # Set center_id based on current user's role
+    if current_user.role == UserRole.CENTER_ADMIN:
+        center_id = current_user.center_id
+    else:
+        center_id = user_data.center_id or current_user.center_id
+    
+    user_dict = user_data.dict()
+    user_dict["password"] = hashed_password
+    user_dict["center_id"] = center_id
+    user_dict["id"] = str(uuid.uuid4())
+    user_dict["is_active"] = True
+    user_dict["created_at"] = datetime.now(timezone.utc)
+    user_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    # Remove password from dict for response
+    response_dict = user_dict.copy()
+    del response_dict["password"]
+    
+    await db.users.insert_one(user_dict)
+    return User(**response_dict)
+
+class UserUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    specialization: Optional[str] = None
+    license_number: Optional[str] = None
+    is_active: Optional[bool] = None
+    role: Optional[UserRole] = None
+
+@api_router.put("/users/{user_id}", response_model=User)
+async def update_user(user_id: str, update_data: UserUpdate, current_user: User = Depends(get_current_user)):
+    # Only super_admin and center_admin can update users, or users can update themselves (limited)
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Permission checks
+    if current_user.role == UserRole.PSYCHOLOGIST and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user.role == UserRole.CENTER_ADMIN:
+        if target_user["center_id"] != current_user.center_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        # Center admin cannot change roles to super_admin
+        if update_data.role == UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Cannot assign super admin role")
+    
+    # Psychologists can only update limited fields
+    if current_user.role == UserRole.PSYCHOLOGIST:
+        allowed_fields = {"first_name", "last_name", "phone", "specialization", "license_number"}
+        update_dict = {k: v for k, v in update_data.dict().items() if k in allowed_fields and v is not None}
+    else:
+        update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    
+    update_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.users.update_one({"id": user_id}, {"$set": update_dict})
+    updated_user = await db.users.find_one({"id": user_id})
+    
+    return User(**updated_user)
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: User = Depends(get_current_user)):
+    # Only super_admin and center_admin can delete users
+    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Center admin can only delete users from their center
+    if current_user.role == UserRole.CENTER_ADMIN:
+        if target_user["center_id"] != current_user.center_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Cannot delete yourself
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    
+    await db.users.update_one({"id": user_id}, {"$set": {"is_active": False, "updated_at": datetime.now(timezone.utc)}})
+    return {"message": "User deactivated successfully"}
+
 # Initialize Super Admin (for first setup)
 @api_router.post("/init/super-admin")
 async def create_initial_super_admin():
