@@ -407,13 +407,21 @@ const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`${API}/patients`);
-      const patients = response.data;
+      const [patientsResponse, appointmentsResponse, paymentsResponse] = await Promise.all([
+        axios.get(`${API}/patients`),
+        axios.get(`${API}/appointments?start_date=${new Date().toISOString().split('T')[0]}&end_date=${new Date().toISOString().split('T')[0]}`),
+        axios.get(`${API}/payments/stats`)
+      ]);
+      
+      const patients = patientsResponse.data;
+      const todayAppointments = appointmentsResponse.data;
+      const paymentStats = paymentsResponse.data;
+      
       setStats({
         totalPatients: patients.length,
         activePatients: patients.filter(p => p.is_active).length,
-        appointmentsToday: 0, // TODO: Implement appointments
-        monthlyRevenue: 0 // TODO: Implement finances
+        appointmentsToday: todayAppointments.length,
+        monthlyRevenue: paymentStats.monthly_total || 0
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
