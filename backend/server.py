@@ -98,6 +98,7 @@ class Patient(BaseModel):
     diagnosis: Optional[Dict[str, Any]] = None
     progress_notes: List[Dict[str, Any]] = []
     anamnesis: Optional[Dict[str, Any]] = None  # Nueva ficha de anamnesis
+    notes: Optional[str] = None  # Notas generales del paciente
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
