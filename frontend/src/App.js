@@ -1088,7 +1088,7 @@ const MainApp = () => {
               <PatientManagement />
             </TabsContent>
             <TabsContent value="schedule" className="m-0 h-full">
-              <div className="p-6"><h1 className="text-2xl">Schedule Management (Coming Soon)</h1></div>
+              <AppointmentManagement />
             </TabsContent>
             <TabsContent value="finances" className="m-0 h-full">
               <div className="p-6"><h1 className="text-2xl">Financial Management (Coming Soon)</h1></div>
