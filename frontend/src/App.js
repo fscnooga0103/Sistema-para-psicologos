@@ -2678,8 +2678,351 @@ const MainApp = () => {
         return <SessionManagement />;
       case 'finances':
         return <FinanceManagement />;
-      case 'settings':
-        return <div className="p-6"><h1 className="text-2xl">Settings (Coming Soon)</h1></div>;
+const SettingsManagement = () => {
+  const { user } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
+  const [activeTab, setActiveTab] = useState('profile');
+  const [profileData, setProfileData] = useState({
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    email: user?.email || '',
+    phone: '',
+    specialization: '',
+    license_number: ''
+  });
+  const [preferences, setPreferences] = useState({
+    default_appointment_duration: 60,
+    default_session_rate: 0,
+    work_hours_start: '08:00',
+    work_hours_end: '18:00',
+    notifications_enabled: true,
+    email_reminders: true
+  });
+
+  const updateProfile = async () => {
+    try {
+      await axios.put(`${API}/users/profile`, profileData);
+      alert('Perfil actualizado exitosamente');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Error al actualizar perfil');
+    }
+  };
+
+  const updatePreferences = async () => {
+    try {
+      await axios.put(`${API}/users/preferences`, preferences);
+      alert('Preferencias actualizadas exitosamente');
+    } catch (error) {
+      console.error('Error updating preferences:', error);
+      alert('Error al actualizar preferencias');
+    }
+  };
+
+  const settingsTabs = [
+    { id: 'profile', label: 'Perfil', icon: Users },
+    { id: 'preferences', label: 'Preferencias', icon: Settings },
+    { id: 'security', label: 'Seguridad', icon: Lock },
+    { id: 'about', label: 'Acerca de', icon: FileText }
+  ];
+
+  const renderTabContent = () => {
+    switch(activeTab) {
+      case 'profile':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Información Personal</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="first_name">Nombre</Label>
+                  <Input
+                    id="first_name"
+                    value={profileData.first_name}
+                    onChange={(e) => setProfileData({...profileData, first_name: e.target.value})}
+                    placeholder="Tu nombre"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="last_name">Apellido</Label>
+                  <Input
+                    id="last_name"
+                    value={profileData.last_name}
+                    onChange={(e) => setProfileData({...profileData, last_name: e.target.value})}
+                    placeholder="Tu apellido"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                    placeholder="tu@email.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Teléfono</Label>
+                  <Input
+                    id="phone"
+                    value={profileData.phone}
+                    onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                    placeholder="+1234567890"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="specialization">Especialización</Label>
+                  <Input
+                    id="specialization"
+                    value={profileData.specialization}
+                    onChange={(e) => setProfileData({...profileData, specialization: e.target.value})}
+                    placeholder="Psicología Clínica, Terapia Cognitiva, etc."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="license_number">Número de Licencia</Label>
+                  <Input
+                    id="license_number"
+                    value={profileData.license_number}
+                    onChange={(e) => setProfileData({...profileData, license_number: e.target.value})}
+                    placeholder="Número de licencia profesional"
+                  />
+                </div>
+              </div>
+              <div className="mt-6">
+                <Button onClick={updateProfile}>
+                  Actualizar Perfil
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'preferences':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Preferencias de Trabajo</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="duration">Duración Default de Citas (minutos)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={preferences.default_appointment_duration}
+                      onChange={(e) => setPreferences({...preferences, default_appointment_duration: parseInt(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="rate">Tarifa por Sesión</Label>
+                    <Input
+                      id="rate"
+                      type="number"
+                      step="0.01"
+                      value={preferences.default_session_rate}
+                      onChange={(e) => setPreferences({...preferences, default_session_rate: parseFloat(e.target.value)})}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="start_time">Hora de Inicio</Label>
+                    <Input
+                      id="start_time"
+                      type="time"
+                      value={preferences.work_hours_start}
+                      onChange={(e) => setPreferences({...preferences, work_hours_start: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="end_time">Hora de Fin</Label>
+                    <Input
+                      id="end_time"
+                      type="time"
+                      value={preferences.work_hours_end}
+                      onChange={(e) => setPreferences({...preferences, work_hours_end: e.target.value})}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Idioma</h4>
+                  <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Seleccionar idioma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Notificaciones</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="notifications"
+                        checked={preferences.notifications_enabled}
+                        onChange={(e) => setPreferences({...preferences, notifications_enabled: e.target.checked})}
+                        className="rounded"
+                      />
+                      <Label htmlFor="notifications">Habilitar notificaciones del sistema</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="email_reminders"
+                        checked={preferences.email_reminders}
+                        onChange={(e) => setPreferences({...preferences, email_reminders: e.target.checked})}
+                        className="rounded"
+                      />
+                      <Label htmlFor="email_reminders">Recordatorios por email</Label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <Button onClick={updatePreferences}>
+                  Guardar Preferencias
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'security':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Cambiar Contraseña</h3>
+              <div className="space-y-4 max-w-md">
+                <div>
+                  <Label htmlFor="current_password">Contraseña Actual</Label>
+                  <Input
+                    id="current_password"
+                    type="password"
+                    placeholder="Contraseña actual"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new_password">Nueva Contraseña</Label>
+                  <Input
+                    id="new_password"
+                    type="password"
+                    placeholder="Nueva contraseña"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="confirm_password">Confirmar Nueva Contraseña</Label>
+                  <Input
+                    id="confirm_password"
+                    type="password"
+                    placeholder="Confirmar contraseña"
+                  />
+                </div>
+                <Button>Cambiar Contraseña</Button>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Sesiones Activas</h3>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Sesión Actual</p>
+                    <p className="text-sm text-gray-500">Iniciada: {new Date().toLocaleString()}</p>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Cerrar Otras Sesiones
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case 'about':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Acerca del Sistema</h3>
+              <Card className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-gray-900">Sistema de Gestión Psicológica</h4>
+                    <p className="text-sm text-gray-600">Versión 1.0.0</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">Descripción</h4>
+                    <p className="text-sm text-gray-600">
+                      Sistema integral para la gestión de práctica psicológica, incluyendo manejo de pacientes, 
+                      agenda de citas, seguimiento de objetivos terapéuticos y gestión financiera.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">Características</h4>
+                    <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                      <li>Gestión completa de pacientes con historia clínica</li>
+                      <li>Sistema de citas con vista de cronograma</li>
+                      <li>Seguimiento de objetivos semanales</li>
+                      <li>Gestión financiera con reportes</li>
+                      <li>Interfaz responsive para móvil y escritorio</li>
+                      <li>Soporte multiidioma (Español/Inglés)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">Soporte</h4>
+                    <p className="text-sm text-gray-600">
+                      Para soporte técnico o consultas, contacta al administrador del sistema.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
+      </div>
+
+      <div className="flex space-x-6">
+        {/* Sidebar Tabs */}
+        <div className="w-64 bg-white rounded-lg border p-4">
+          <nav className="space-y-2">
+            {settingsTabs.map((tab) => (
+              <Button
+                key={tab.id}
+                variant={activeTab === tab.id ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <tab.icon className="h-4 w-4 mr-2" />
+                {tab.label}
+              </Button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 bg-white rounded-lg border p-6">
+          {renderTabContent()}
+        </div>
+      </div>
+    </div>
+  );
+};
       default:
         return <Dashboard onNavigate={setCurrentView} />;
     }
