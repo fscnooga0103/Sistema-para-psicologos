@@ -98,16 +98,19 @@ class UserCreationTester:
 
     def test_create_psychologist_user(self):
         """Test creating a psychologist user"""
+        import time
+        timestamp = str(int(time.time()))
+        
         user_data = {
-            "username": "psicologo_test",
-            "email": "psicologo_test@ejemplo.com",
-            "first_name": "Dr. Juan",
-            "last_name": "Pérez",
+            "username": f"psicologo_nuevo_{timestamp}",
+            "email": f"psicologo_nuevo_{timestamp}@ejemplo.com",
+            "first_name": "Dr. Ana",
+            "last_name": "Martínez",
             "password": "password123",
             "role": "psychologist",
-            "phone": "555-123-4567",
-            "specialization": "Psicología Clínica",
-            "license_number": "PSI-123456"
+            "phone": "555-123-7890",
+            "specialization": "Psicología Cognitiva",
+            "license_number": f"PSI-{timestamp}"
         }
         
         success, response = self.run_test(
@@ -126,16 +129,19 @@ class UserCreationTester:
 
     def test_create_center_admin_user(self):
         """Test creating a center_admin user (only super_admin can do this)"""
+        import time
+        timestamp = str(int(time.time()))
+        
         user_data = {
-            "username": "admin_centro_test",
-            "email": "admin_centro@ejemplo.com",
-            "first_name": "María",
-            "last_name": "González",
+            "username": f"admin_centro_nuevo_{timestamp}",
+            "email": f"admin_centro_nuevo_{timestamp}@ejemplo.com",
+            "first_name": "Carlos",
+            "last_name": "Rodríguez",
             "password": "password123",
             "role": "center_admin",
-            "phone": "555-987-6543",
-            "specialization": "Administración de Centro",
-            "license_number": "ADM-789012"
+            "phone": "555-987-1234",
+            "specialization": "Administración Clínica",
+            "license_number": f"ADM-{timestamp}"
         }
         
         success, response = self.run_test(
