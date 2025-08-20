@@ -3418,6 +3418,9 @@ const SettingsManagement = () => {
             <TabsContent value="finances" className="m-0 h-full">
               <FinanceManagement />
             </TabsContent>
+            <TabsContent value="users" className="m-0 h-full">
+              <UserManagement />
+            </TabsContent>
             <TabsContent value="settings" className="m-0 h-full">
               <SettingsManagement />
             </TabsContent>
