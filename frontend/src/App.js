@@ -49,6 +49,8 @@ const translations = {
     dashboard: "Dashboard",
     patients: "Patients",
     schedule: "Schedule",
+    appointments: "Appointments",
+    sessions: "Sessions",
     finances: "Finances",
     settings: "Settings",
     logout: "Logout",
