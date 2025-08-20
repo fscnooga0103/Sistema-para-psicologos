@@ -2067,44 +2067,50 @@ const PatientManagement = () => {
     };
 
     return (
-      <div className={`fixed inset-y-0 right-0 z-40 w-96 bg-white shadow-2xl transform transition-transform duration-300 ${
+      <div className={`fixed inset-y-0 right-0 z-50 w-96 bg-white shadow-2xl transform transition-transform duration-300 ${
         sidebarOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}>
-        <div className="flex flex-col h-full">
+      } overflow-hidden`}>
+        <div className="flex flex-col h-full max-h-screen">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b">
+          <div className="flex items-center justify-between p-4 border-b bg-white flex-shrink-0">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-gray-900">
                 {selectedPatient.first_name} {selectedPatient.last_name}
               </h2>
-              <p className="text-sm text-gray-500">Detalles del Paciente</p>
+              <p className="text-xs text-gray-500">Detalles del Paciente</p>
             </div>
             <Button variant="ghost" size="sm" onClick={closeSidebar}>
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Tabs */}
-          <div className="border-b">
-            <div className="flex space-x-1 p-2">
-              {sidebarTabs.map((tab) => (
-                <Button
-                  key={tab.id}
-                  variant={activeTab === tab.id ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveTab(tab.id)}
-                  className="flex-1 text-xs"
-                >
-                  <tab.icon className="h-3 w-3 mr-1" />
-                  {tab.label}
-                </Button>
-              ))}
-            </div>
+          <div className="border-b bg-white flex-shrink-0">
+            <ScrollArea className="w-full">
+              <div className="flex p-1 space-x-1 min-w-max">
+                {sidebarTabs.map((tab) => (
+                  <Button
+                    key={tab.id}
+                    variant={activeTab === tab.id ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab(tab.id)}
+                    className="whitespace-nowrap text-xs px-3 py-2"
+                  >
+                    <tab.icon className="h-3 w-3 mr-1" />
+                    {tab.label}
+                  </Button>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            {renderTabContent()}
+          {/* Content - Scrollable */}
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="p-4 pb-6">
+                {renderTabContent()}
+              </div>
+            </ScrollArea>
           </div>
         </div>
       </div>
