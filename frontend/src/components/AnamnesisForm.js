@@ -329,8 +329,6 @@ const AnamnesisForm = ({ patient, isOpen, onClose, onSave }) => {
     interview_observations: ''
   });
 
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     if (patient && isOpen) {
       // Load existing anamnesis if available
