@@ -901,7 +901,7 @@ const AnamnesisForm = ({ patient, isOpen, onClose, onSave }) => {
 
         <div className="flex flex-col h-full">
           {/* Progress bar */}
-          <div className="mb-6">
+          <div className="mb-4">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
               <span>Progreso</span>
               <span>{currentStep + 1} de {sections.length}</span>
@@ -909,12 +909,43 @@ const AnamnesisForm = ({ patient, isOpen, onClose, onSave }) => {
             <Progress value={((currentStep + 1) / sections.length) * 100} className="h-2" />
           </div>
 
-          {/* Section navigation */}
-          <div className="mb-6">
+          {/* Section navigation tabs */}
+          <div className="mb-4 border-b">
+            <div className="flex overflow-x-auto scrollbar-hide space-x-1 pb-2">
+              {sections.map((section, index) => (
+                <button
+                  key={section.id}
+                  onClick={() => setCurrentStep(index)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-t-lg text-sm whitespace-nowrap transition-colors ${
+                    index === currentStep
+                      ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-600'
+                      : index < currentStep
+                      ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {React.createElement(section.icon, { 
+                    className: `h-4 w-4 ${
+                      index === currentStep ? 'text-blue-600' : 
+                      index < currentStep ? 'text-green-600' : 'text-gray-400'
+                    }` 
+                  })}
+                  <span className="hidden sm:inline">{section.title}</span>
+                  <span className="sm:hidden">{index + 1}</span>
+                  {index < currentStep && (
+                    <CheckCircle className="h-3 w-3 text-green-600" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Current section header */}
+          <div className="mb-6 bg-gray-50 rounded-lg p-4">
             <div className="flex items-center space-x-4">
-              {React.createElement(sections[currentStep].icon, { className: "h-6 w-6 text-blue-600" })}
+              {React.createElement(sections[currentStep].icon, { className: "h-8 w-8 text-blue-600" })}
               <div>
-                <h3 className="text-lg font-semibold">{sections[currentStep].title}</h3>
+                <h3 className="text-xl font-semibold text-gray-900">{sections[currentStep].title}</h3>
                 <p className="text-sm text-gray-600">{sections[currentStep].description}</p>
               </div>
             </div>
