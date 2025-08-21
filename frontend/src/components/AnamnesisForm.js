@@ -36,6 +36,7 @@ const API = `${BACKEND_URL}/api`;
 
 const AnamnesisForm = ({ patient, isOpen, onClose, onSave }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     general_data: {
       patient_name: `${patient?.first_name || ''} ${patient?.last_name || ''}`,
