@@ -88,10 +88,12 @@ class User(BaseModel):
     last_name: Optional[str] = None
     username: Optional[str] = None
     role: str
-    center_id: Optional[str] = None
+    center_id: Optional[str] = None      # ID del centro asignado
     phone: Optional[str] = None
     specialization: Optional[str] = None
     license_number: Optional[str] = None
+    database_name: Optional[str] = None  # Base de datos privada (solo psicólogos)
+    email_verified: bool = False         # Validación de email
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
