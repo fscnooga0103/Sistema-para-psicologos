@@ -2743,6 +2743,8 @@ const MainApp = () => {
     switch (currentView) {
       case 'patients':
         return <PatientManagement />;
+      case 'centers':
+        return <CenterManagement />;
       case 'schedule':
         return <AppointmentManagement />;
       case 'sessions':
@@ -2750,6 +2752,8 @@ const MainApp = () => {
       case 'finances':
         return <FinanceManagement />;
       case 'users':
+        return <UserManagement />;
+      case 'psychologists':
         return <UserManagement />;
       case 'settings':
         return <SettingsManagement />;
