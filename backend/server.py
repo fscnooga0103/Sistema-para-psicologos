@@ -176,6 +176,8 @@ class PatientCreate(BaseModel):
     gender: Optional[str] = None
     address: Optional[str] = None
     emergency_contact: Optional[Dict[str, str]] = None
+    patient_type: PatientType = PatientType.INDIVIDUAL
+    shared_with: List[str] = []  # IDs de psicólogos para pacientes compartidos
 
 # Modelos para la Ficha de Anamnesis
 class GeneralData(BaseModel):
