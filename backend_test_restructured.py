@@ -204,9 +204,11 @@ class RestructuredBackendTester:
             return False
 
         # Test 3.1: Create Psychologist User
+        import time
+        timestamp = str(int(time.time()))
         psychologist_data = {
-            "username": "dr_martinez",
-            "email": "ana.martinez@psicologia.com",
+            "username": f"dr_martinez_{timestamp}",
+            "email": f"ana.martinez.{timestamp}@psicologia.com",
             "first_name": "Ana",
             "last_name": "Martínez",
             "password": "secure123",
