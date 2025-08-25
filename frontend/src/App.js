@@ -1455,18 +1455,45 @@ const Sidebar = ({ isOpen, onClose, currentView, setCurrentView }) => {
   const { user, logout } = useAuth();
   const { language, t } = useLanguage();
 
-  const menuItems = [
-    { icon: FileText, label: t.dashboard, view: "dashboard" },
-    { icon: Users, label: t.patients, view: "patients" },
-    { icon: Calendar, label: t.schedule, view: "schedule" },
-    { icon: TrendingUp, label: t.sessions, view: "sessions" },
-    { icon: DollarSign, label: t.finances, view: "finances" },
-    // Only show user management for admins
-    ...(user && (user.role === 'super_admin' || user.role === 'center_admin') ? 
-      [{ icon: UserPlus, label: "Usuarios", view: "users" }] : []
-    ),
-    { icon: Settings, label: t.settings, view: "settings" },
+// Role-specific menu items
+const getMenuItems = (user) => {
+  const baseItems = [
+    { icon: FileText, label: "Dashboard", view: "dashboard" }
   ];
+
+  if (user?.role === 'super_admin') {
+    return [
+      ...baseItems,
+      { icon: Building, label: "Centros", view: "centers" },
+      { icon: UserPlus, label: "Usuarios", view: "users" },
+      { icon: Users, label: "Psicólogos", view: "psychologists" },
+      { icon: Settings, label: "Configuración", view: "settings" }
+    ];
+  } else if (user?.role === 'center_admin') {
+    return [
+      ...baseItems,
+      { icon: Users, label: "Psicólogos", view: "psychologists" },
+      { icon: UserPlus, label: "Pacientes", view: "patients" },
+      { icon: Calendar, label: "Agenda", view: "schedule" },
+      { icon: TrendingUp, label: "Sesiones", view: "sessions" },
+      { icon: DollarSign, label: "Finanzas", view: "finances" },
+      { icon: Settings, label: "Configuración", view: "settings" }
+    ];
+  } else if (user?.role === 'psychologist') {
+    return [
+      ...baseItems,
+      { icon: Users, label: "Mis Pacientes", view: "patients" },
+      { icon: Calendar, label: "Agenda", view: "schedule" },
+      { icon: TrendingUp, label: "Sesiones", view: "sessions" },
+      { icon: DollarSign, label: "Finanzas", view: "finances" },
+      { icon: Settings, label: "Configuración", view: "settings" }
+    ];
+  } else {
+    return baseItems;
+  }
+};
+
+  const menuItems = getMenuItems(user);
 
   return (
     <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-br from-blue-900 to-purple-900 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-0`}>
