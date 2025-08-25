@@ -1206,6 +1206,111 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
     await db.users.update_one({"id": user_id}, {"$set": {"is_active": False, "updated_at": datetime.now(timezone.utc)}})
     return {"message": "User deactivated successfully"}
 
+# Center Management endpoints (Solo Super Admin)
+@api_router.post("/centers", response_model=Center)
+async def create_center(center: CenterCreate, current_user: User = Depends(get_current_user)):
+    # Solo super_admin puede crear centros
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can create centers")
+    
+    # Crear nombre único para la base de datos del centro
+    database_name = f"center_{center.name.lower().replace(' ', '_')}_{str(uuid.uuid4())[:8]}"
+    
+    center_dict = center.dict()
+    center_dict["database_name"] = database_name
+    center_dict["created_by"] = current_user.id
+    
+    center_obj = Center(**center_dict)
+    await db.centers.insert_one(center_obj.dict())
+    return center_obj
+
+@api_router.get("/centers", response_model=List[Center])
+async def get_centers(current_user: User = Depends(get_current_user)):
+    # Solo super_admin puede ver todos los centros
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    centers = await db.centers.find().to_list(1000)
+    return [Center(**center) for center in centers]
+
+@api_router.get("/centers/{center_id}", response_model=Center)
+async def get_center(center_id: str, current_user: User = Depends(get_current_user)):
+    center = await db.centers.find_one({"id": center_id})
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    
+    # Verificar permisos
+    if current_user.role == UserRole.SUPER_ADMIN:
+        pass  # Acceso completo
+    elif current_user.role == UserRole.CENTER_ADMIN and current_user.center_id == center_id:
+        pass  # Admin del centro puede ver su propio centro
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    return Center(**center)
+
+@api_router.put("/centers/{center_id}", response_model=Center)
+async def update_center(center_id: str, update_data: CenterUpdate, current_user: User = Depends(get_current_user)):
+    # Solo super_admin puede editar centros
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can update centers")
+    
+    center = await db.centers.find_one({"id": center_id})
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    
+    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    update_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.centers.update_one({"id": center_id}, {"$set": update_dict})
+    updated_center = await db.centers.find_one({"id": center_id})
+    return Center(**updated_center)
+
+@api_router.delete("/centers/{center_id}")
+async def delete_center(center_id: str, current_user: User = Depends(get_current_user)):
+    # Solo super_admin puede eliminar centros
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can delete centers")
+    
+    center = await db.centers.find_one({"id": center_id})
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    
+    # Desactivar en lugar de eliminar para mantener integridad
+    await db.centers.update_one({"id": center_id}, {"$set": {"is_active": False, "updated_at": datetime.now(timezone.utc)}})
+    return {"message": "Center deactivated successfully"}
+
+# Endpoint para asignar psicólogos a centros
+@api_router.post("/centers/{center_id}/assign-psychologist/{psychologist_id}")
+async def assign_psychologist_to_center(center_id: str, psychologist_id: str, current_user: User = Depends(get_current_user)):
+    # Solo super_admin puede asignar psicólogos a centros
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can assign psychologists")
+    
+    # Verificar que el centro existe
+    center = await db.centers.find_one({"id": center_id})
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    
+    # Verificar que el psicólogo existe
+    psychologist = await db.users.find_one({"id": psychologist_id, "role": UserRole.PSYCHOLOGIST})
+    if not psychologist:
+        raise HTTPException(status_code=404, detail="Psychologist not found")
+    
+    # Asignar psicólogo al centro
+    await db.users.update_one(
+        {"id": psychologist_id},
+        {"$set": {"center_id": center_id, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    # Agregar psicólogo a la lista del centro
+    await db.centers.update_one(
+        {"id": center_id},
+        {"$addToSet": {"psychologists": psychologist_id}, "$set": {"updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    return {"message": "Psychologist assigned to center successfully"}
+
 # Initialize Super Admin (for first setup)
 @api_router.post("/init/super-admin")
 async def create_initial_super_admin():
