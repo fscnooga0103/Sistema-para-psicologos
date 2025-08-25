@@ -2758,7 +2758,286 @@ const MainApp = () => {
     }
   };
 
-const UserManagement = () => {
+const CenterManagement = () => {
+  const { user } = useAuth();
+  const [centers, setCenters] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingCenter, setEditingCenter] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [psychologists, setPsychologists] = useState([]);
+
+  useEffect(() => {
+    fetchCenters();
+    fetchPsychologists();
+  }, []);
+
+  const fetchCenters = async () => {
+    try {
+      const response = await axios.get(`${API}/centers`);
+      setCenters(response.data);
+    } catch (error) {
+      console.error('Error fetching centers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPsychologists = async () => {
+    try {
+      const response = await axios.get(`${API}/users`);
+      setPsychologists(response.data.filter(u => u.role === 'psychologist'));
+    } catch (error) {
+      console.error('Error fetching psychologists:', error);
+    }
+  };
+
+  const AddCenterModal = () => {
+    const [formData, setFormData] = useState({
+      name: '',
+      description: '',
+      address: '',
+      phone: '',
+      email: '',
+      admin_id: ''
+    });
+
+    useEffect(() => {
+      if (editingCenter) {
+        setFormData(editingCenter);
+      }
+    }, [editingCenter]);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        if (editingCenter) {
+          await axios.put(`${API}/centers/${editingCenter.id}`, formData);
+          alert('Centro actualizado exitosamente');
+        } else {
+          await axios.post(`${API}/centers`, formData);
+          alert('Centro creado exitosamente');
+        }
+        
+        fetchCenters();
+        setShowAddModal(false);
+        setEditingCenter(null);
+        setFormData({
+          name: '',
+          description: '',
+          address: '',
+          phone: '',
+          email: '',
+          admin_id: ''
+        });
+      } catch (error) {
+        console.error('Error saving center:', error);
+        alert(error.response?.data?.detail || 'Error al guardar centro');
+      }
+    };
+
+    const centerAdmins = psychologists.filter(p => 
+      p.role === 'center_admin' || p.role === 'psychologist'
+    );
+
+    return (
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingCenter ? 'Editar Centro' : 'Nuevo Centro'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nombre del Centro *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                placeholder="Centro de Psicología Integral"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Descripción</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                placeholder="Descripción del centro y especialidades"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  placeholder="+51-1-234-5678"
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  placeholder="contacto@centro.com"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="address">Dirección</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                placeholder="Av. Principal 123, Lima, Perú"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingCenter(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">{editingCenter ? 'Actualizar' : 'Crear Centro'}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  const assignPsychologist = async (centerId, psychologistId) => {
+    try {
+      await axios.post(`${API}/centers/${centerId}/assign-psychologist/${psychologistId}`);
+      alert('Psicólogo asignado exitosamente');
+      fetchCenters();
+      fetchPsychologists();
+    } catch (error) {
+      console.error('Error assigning psychologist:', error);
+      alert('Error al asignar psicólogo');
+    }
+  };
+
+  if (loading) {
+    return <div className="p-6">Cargando centros...</div>;
+  }
+
+  // Solo super admin puede ver gestión de centros
+  if (user?.role !== 'super_admin') {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Acceso Restringido</h3>
+            <p className="text-gray-500">Solo el administrador general puede gestionar centros</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Gestión de Centros</h1>
+        <Button onClick={() => setShowAddModal(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Centro
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {centers.map((center) => (
+          <Card key={center.id} className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-lg text-gray-900">{center.name}</h3>
+                  <p className="text-sm text-gray-500">{center.email}</p>
+                </div>
+                <Badge variant={center.is_active ? "default" : "secondary"}>
+                  {center.is_active ? 'Activo' : 'Inactivo'}
+                </Badge>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                {center.description && (
+                  <p className="text-sm text-gray-600">{center.description}</p>
+                )}
+                {center.address && (
+                  <p className="text-sm text-gray-600">
+                    <strong>Dirección:</strong> {center.address}
+                  </p>
+                )}
+                {center.phone && (
+                  <p className="text-sm text-gray-600">
+                    <strong>Teléfono:</strong> {center.phone}
+                  </p>
+                )}
+                <p className="text-sm text-gray-600">
+                  <strong>Psicólogos:</strong> {center.psychologists?.length || 0}
+                </p>
+              </div>
+
+              <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setEditingCenter(center);
+                    setShowAddModal(true);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Editar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    // Modal para asignar psicólogos
+                    const psychId = prompt('ID del psicólogo a asignar:');
+                    if (psychId) {
+                      assignPsychologist(center.id, psychId);
+                    }
+                  }}
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Asignar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {centers.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay centros registrados</h3>
+            <p className="text-gray-500 mb-4">Crea el primer centro para comenzar</p>
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Crear Primer Centro
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <AddCenterModal />
+    </div>
+  );
+};
   const { user } = useAuth();
   const { t } = useLanguage();
   const [users, setUsers] = useState([]);
