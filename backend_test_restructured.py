@@ -249,8 +249,8 @@ class RestructuredBackendTester:
 
         # Test 3.2: Create Center Admin User
         center_admin_data = {
-            "username": "admin_rodriguez",
-            "email": "carlos.rodriguez@centropsicologia.com",
+            "username": f"admin_rodriguez_{timestamp}",
+            "email": f"carlos.rodriguez.{timestamp}@centropsicologia.com",
             "first_name": "Carlos",
             "last_name": "Rodríguez",
             "password": "admin456",
