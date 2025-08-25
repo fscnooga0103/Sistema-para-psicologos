@@ -972,26 +972,38 @@ const AnamnesisForm = ({ patient, isOpen, onClose, onSave }) => {
           </ScrollArea>
 
           {/* Navigation buttons */}
-          <div className="flex justify-between items-center pt-6 mt-6 border-t">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 0}
-            >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Anterior
-            </Button>
+          <div className="flex justify-between items-center pt-6 border-t bg-gray-50 p-4 rounded-lg mt-6">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentStep === 0}
+                className="flex items-center space-x-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span>Anterior</span>
+              </Button>
+              
+              {/* Section counter and completion indicator */}
+              <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
+                <span>Sección {currentStep + 1} de {sections.length}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-green-600">
+                  {sections.filter((_, index) => index <= currentStep).length} completadas
+                </span>
+              </div>
+            </div>
 
             <div className="flex space-x-2">
               {currentStep === sections.length - 1 ? (
-                <Button onClick={handleSave} disabled={loading}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {loading ? 'Guardando...' : 'Guardar Anamnesis'}
+                <Button onClick={handleSave} disabled={loading} className="flex items-center space-x-2">
+                  <Save className="h-4 w-4" />
+                  <span>{loading ? 'Guardando...' : 'Guardar Anamnesis'}</span>
                 </Button>
               ) : (
-                <Button onClick={nextStep}>
-                  Siguiente
-                  <ChevronRight className="h-4 w-4 ml-2" />
+                <Button onClick={nextStep} className="flex items-center space-x-2">
+                  <span>Siguiente</span>
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               )}
             </div>
