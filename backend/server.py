@@ -512,6 +512,10 @@ async def login_user(user_data: UserLogin):
             detail="Inactive user"
         )
     
+    # Verificar email para nuevos usuarios (opcional - comentar si no se requiere)
+    # if not user.get("email_verified", False):
+    #     raise HTTPException(status_code=401, detail="Email not verified")
+    
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user["id"]}, expires_delta=access_token_expires
