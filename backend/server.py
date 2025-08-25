@@ -527,7 +527,7 @@ async def get_centers(current_user: User = Depends(require_role([UserRole.SUPER_
     centers = await db.centers.find().to_list(1000)
     return [Center(**center) for center in centers]
 
-# Patient endpoints
+# Patient endpoints con nueva lógica de permisos
 @api_router.post("/patients", response_model=Patient)
 async def create_patient(patient: PatientCreate, current_user: User = Depends(get_current_user)):
     # Verificar permisos para crear pacientes
