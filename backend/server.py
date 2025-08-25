@@ -719,10 +719,14 @@ async def create_patient(patient: PatientCreate, current_user: User = Depends(ge
         # Paciente individual - BD privada del psicólogo
         patient_dict["database_context"] = current_user.id
         patient_dict["center_id"] = None
-    elif current_user.role in [UserRole.CENTER_ADMIN, UserRole.SUPER_ADMIN]:
+    elif current_user.role == UserRole.CENTER_ADMIN:
         # Paciente del centro
         patient_dict["database_context"] = current_user.center_id
         patient_dict["center_id"] = current_user.center_id
+    elif current_user.role == UserRole.SUPER_ADMIN:
+        # Super admin puede crear pacientes en contexto global o asignar a psicólogo
+        patient_dict["database_context"] = current_user.id  # Use super admin ID as context
+        patient_dict["center_id"] = None
     
     patient_obj = Patient(**patient_dict)
     
