@@ -129,19 +129,7 @@ class Token(BaseModel):
     token_type: str
     user: User
 
-class Center(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    name: str
-    address: str
-    phone: str
-    email: EmailStr
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class CenterCreate(BaseModel):
-    name: str
-    address: str
-    phone: str
-    email: EmailStr
 
 class Patient(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
