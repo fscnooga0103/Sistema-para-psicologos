@@ -536,6 +536,158 @@ async def login_user(user_data: UserLogin):
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return current_user
 
+# Función para enviar emails (mock - reemplazar con servicio real)
+async def send_email(to_email: str, subject: str, body: str):
+    """
+    Mock email function - reemplazar con servicio de email real
+    Por ahora solo imprime el email en los logs
+    """
+    print(f"=== EMAIL MOCKUP ===")
+    print(f"To: {to_email}")
+    print(f"Subject: {subject}")
+    print(f"Body: {body}")
+    print(f"===================")
+    return True
+
+# Auth endpoints con validación de email
+@api_router.post("/auth/register")
+async def register_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
+    """
+    Registro de usuario - solo admins pueden registrar usuarios
+    Envía email de verificación automáticamente
+    """
+    # Reutilizar la lógica de create_user pero agregar verificación de email
+    user = await create_user(user_data, current_user)
+    
+    # Generar token de verificación de email
+    verification_token = secrets.token_urlsafe(32)
+    token_obj = EmailVerificationToken(
+        user_id=user.id,
+        token=verification_token,
+        token_type="email_verification",
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=24)
+    )
+    await db.email_tokens.insert_one(token_obj.dict())
+    
+    # Enviar email de verificación
+    verification_url = f"https://tu-dominio.com/verify-email?token={verification_token}"
+    await send_email(
+        user.email,
+        "Verifica tu cuenta - Sistema de Gestión Psicológica",
+        f"""
+        Hola {user.first_name},
+        
+        Tu cuenta ha sido creada exitosamente. Para activar tu cuenta, haz clic en el siguiente enlace:
+        
+        {verification_url}
+        
+        Este enlace expira en 24 horas.
+        
+        Saludos,
+        Sistema de Gestión Psicológica
+        """
+    )
+    
+    return {"message": "User created successfully. Verification email sent."}
+
+@api_router.post("/auth/verify-email")
+async def verify_email(token: str):
+    """Verificar email con token"""
+    token_obj = await db.email_tokens.find_one({
+        "token": token,
+        "token_type": "email_verification",
+        "used": False,
+        "expires_at": {"$gt": datetime.now(timezone.utc)}
+    })
+    
+    if not token_obj:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+    
+    # Marcar usuario como verificado
+    await db.users.update_one(
+        {"id": token_obj["user_id"]},
+        {"$set": {"email_verified": True, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    # Marcar token como usado
+    await db.email_tokens.update_one(
+        {"id": token_obj["id"]},
+        {"$set": {"used": True}}
+    )
+    
+    return {"message": "Email verified successfully"}
+
+@api_router.post("/auth/request-password-reset")
+async def request_password_reset(request: PasswordResetRequest):
+    """Solicitar recuperación de contraseña"""
+    user = await db.users.find_one({"email": request.email})
+    if not user:
+        # Por seguridad, no revelar si el email existe
+        return {"message": "If the email exists, a password reset link has been sent."}
+    
+    # Generar token de recuperación
+    reset_token = secrets.token_urlsafe(32)
+    token_obj = EmailVerificationToken(
+        user_id=user["id"],
+        token=reset_token,
+        token_type="password_reset",
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=2)  # 2 horas para reset
+    )
+    await db.email_tokens.insert_one(token_obj.dict())
+    
+    # Enviar email de recuperación
+    reset_url = f"https://tu-dominio.com/reset-password?token={reset_token}"
+    await send_email(
+        user["email"],
+        "Recuperación de Contraseña - Sistema de Gestión Psicológica",
+        f"""
+        Hola {user['first_name']},
+        
+        Has solicitado recuperar tu contraseña. Haz clic en el siguiente enlace para crear una nueva contraseña:
+        
+        {reset_url}
+        
+        Este enlace expira en 2 horas por seguridad.
+        
+        Si no solicitaste este cambio, ignora este email.
+        
+        Saludos,
+        Sistema de Gestión Psicológica
+        """
+    )
+    
+    return {"message": "If the email exists, a password reset link has been sent."}
+
+@api_router.post("/auth/reset-password")
+async def reset_password(reset_data: PasswordResetConfirm):
+    """Confirmar nueva contraseña con token"""
+    token_obj = await db.email_tokens.find_one({
+        "token": reset_data.token,
+        "token_type": "password_reset",
+        "used": False,
+        "expires_at": {"$gt": datetime.now(timezone.utc)}
+    })
+    
+    if not token_obj:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+    
+    # Hash nueva contraseña
+    hashed_password = pwd_context.hash(reset_data.new_password)
+    
+    # Actualizar contraseña del usuario
+    await db.users.update_one(
+        {"id": token_obj["user_id"]},
+        {"$set": {"password": hashed_password, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    # Marcar token como usado
+    await db.email_tokens.update_one(
+        {"id": token_obj["id"]},
+        {"$set": {"used": True}}
+    )
+    
+    return {"message": "Password reset successfully"}
+
 # Center endpoints
 @api_router.post("/centers", response_model=Center)
 async def create_center(center: CenterCreate, current_user: User = Depends(require_role([UserRole.SUPER_ADMIN]))):
