@@ -1077,17 +1077,25 @@ async def delete_payment(payment_id: str, current_user: User = Depends(get_curre
     await db.payments.delete_one({"id": payment_id})
     return {"message": "Payment deleted successfully"}
 
-# User Management endpoints (for admin users)
+# User Management endpoints con nueva lógica de permisos
 @api_router.get("/users", response_model=List[User])
 async def get_users(current_user: User = Depends(get_current_user)):
-    # Only super_admin and center_admin can view users
-    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
     query = {}
-    if current_user.role == UserRole.CENTER_ADMIN:
-        # Center admin can only see users from their center
-        query["center_id"] = current_user.center_id
+    
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super admin ve todos los usuarios
+        pass
+    elif current_user.role == UserRole.CENTER_ADMIN:
+        # Admin de centro solo ve psicólogos de su centro
+        query = {
+            "$or": [
+                {"center_id": current_user.center_id, "role": UserRole.PSYCHOLOGIST},
+                {"id": current_user.id}  # Se ve a sí mismo
+            ]
+        }
+    else:
+        # Psicólogos no pueden ver otros usuarios
+        raise HTTPException(status_code=403, detail="Access denied")
     
     users = await db.users.find(query).to_list(1000)
     return [User(**user) for user in users]
@@ -1106,11 +1114,19 @@ class UserCreate(BaseModel):
 
 @api_router.post("/users", response_model=User)
 async def create_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
-    # Only super_admin and center_admin can create users
-    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]:
+    # Verificar permisos para crear usuarios
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super admin puede crear cualquier tipo de usuario
+        pass
+    elif current_user.role == UserRole.CENTER_ADMIN:
+        # Admin de centro solo puede crear psicólogos en su centro
+        if user_data.role != UserRole.PSYCHOLOGIST:
+            raise HTTPException(status_code=403, detail="Center admin can only create psychologists")
+        user_data.center_id = current_user.center_id  # Forzar asignación a su centro
+    else:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    # Check if username or email already exists
+    # Verificar que no exista el username o email
     existing_user = await db.users.find_one({
         "$or": [
             {"username": user_data.username},
@@ -1123,21 +1139,19 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
     # Hash password
     hashed_password = pwd_context.hash(user_data.password)
     
-    # Set center_id based on current user's role
-    if current_user.role == UserRole.CENTER_ADMIN:
-        center_id = current_user.center_id
-    else:
-        center_id = user_data.center_id or current_user.center_id
-    
     user_dict = user_data.dict()
     user_dict["password"] = hashed_password
-    user_dict["center_id"] = center_id
     user_dict["id"] = str(uuid.uuid4())
+    user_dict["email_verified"] = False  # Requiere verificación
     user_dict["is_active"] = True
     user_dict["created_at"] = datetime.now(timezone.utc)
     user_dict["updated_at"] = datetime.now(timezone.utc)
     
-    # Remove password from dict for response
+    # Crear base de datos privada para psicólogos
+    if user_data.role == UserRole.PSYCHOLOGIST:
+        user_dict["database_name"] = f"psychologist_{user_data.username}_{str(uuid.uuid4())[:8]}"
+    
+    # Quitar password de la respuesta
     response_dict = user_dict.copy()
     del response_dict["password"]
     
