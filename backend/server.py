@@ -575,7 +575,7 @@ async def register_user(user_data: UserCreate, current_user: User = Depends(get_
         user.email,
         "Verifica tu cuenta - Sistema de Gestión Psicológica",
         f"""
-        Hola {user.first_name},
+        Hola {user.first_name or user.username},
         
         Tu cuenta ha sido creada exitosamente. Para activar tu cuenta, haz clic en el siguiente enlace:
         
