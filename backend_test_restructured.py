@@ -315,7 +315,7 @@ class RestructuredBackendTester:
         # Test 3.4: Test Email Duplication Validation
         duplicate_email_data = {
             "username": "duplicate_test",
-            "email": "ana.martinez@psicologia.com",  # Same email as psychologist
+            "email": f"ana.martinez.{timestamp}@psicologia.com",  # Same email as psychologist
             "first_name": "Test",
             "last_name": "User",
             "password": "test123",
