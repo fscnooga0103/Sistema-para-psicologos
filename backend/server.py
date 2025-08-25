@@ -39,9 +39,46 @@ api_router = APIRouter(prefix="/api")
 
 # Models
 class UserRole(str, Enum):
-    SUPER_ADMIN = "super_admin"
-    CENTER_ADMIN = "center_admin"
-    PSYCHOLOGIST = "psychologist"
+    SUPER_ADMIN = "super_admin"        # Administrador General
+    CENTER_ADMIN = "center_admin"      # Administrador de Centro  
+    PSYCHOLOGIST = "psychologist"      # Psicólogo
+
+class PatientType(str, Enum):
+    INDIVIDUAL = "individual"          # Paciente individual
+    SHARED = "shared"                  # Paciente compartido en centro
+
+# Center Model - Nuevo modelo para centros
+class Center(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    admin_id: Optional[str] = None  # Administrador del centro
+    psychologists: List[str] = []   # IDs de psicólogos asignados
+    database_name: str              # Base de datos específica del centro
+    is_active: bool = True
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CenterCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    admin_id: Optional[str] = None
+
+class CenterUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    admin_id: Optional[str] = None
+    is_active: Optional[bool] = None
 
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
