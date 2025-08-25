@@ -560,15 +560,35 @@ async def create_patient(patient: PatientCreate, current_user: User = Depends(ge
     await db.patients.insert_one(patient_obj.dict())
     return patient_obj
 
+# Patient endpoints con nueva lógica de permisos
 @api_router.get("/patients", response_model=List[Patient])
 async def get_patients(current_user: User = Depends(get_current_user)):
-    if current_user.role == UserRole.SUPER_ADMIN:
-        patients = await db.patients.find({"is_active": True}).to_list(1000)
-    elif current_user.role == UserRole.CENTER_ADMIN:
-        patients = await db.patients.find({"center_id": current_user.center_id, "is_active": True}).to_list(1000)
-    else:  # Psychologist
-        patients = await db.patients.find({"psychologist_id": current_user.id, "is_active": True}).to_list(1000)
+    query = {}
     
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super admin ve todos los pacientes
+        pass
+    elif current_user.role == UserRole.CENTER_ADMIN:
+        # Admin de centro ve pacientes de su centro y pacientes compartidos
+        query = {
+            "$or": [
+                {"center_id": current_user.center_id},  # Pacientes del centro
+                {"database_context": current_user.center_id}  # Contexto del centro
+            ]
+        }
+    elif current_user.role == UserRole.PSYCHOLOGIST:
+        # Psicólogo ve solo sus pacientes individuales y los compartidos con él
+        query = {
+            "$or": [
+                {"psychologist_id": current_user.id},  # Sus pacientes
+                {"shared_with": {"$in": [current_user.id]}},  # Compartidos con él
+                {"database_context": current_user.id}  # Su contexto privado
+            ]
+        }
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    patients = await db.patients.find(query).to_list(1000)
     return [Patient(**patient) for patient in patients]
 
 @api_router.get("/patients/{patient_id}", response_model=Patient)
