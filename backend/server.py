@@ -440,6 +440,26 @@ class PaymentCreate(BaseModel):
     payment_method: Optional[str] = None
     notes: Optional[str] = None
 
+# Email verification and password recovery models
+class EmailVerificationToken(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    token: str
+    token_type: str  # "email_verification" or "password_reset"
+    expires_at: datetime
+    used: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
+class EmailVerificationRequest(BaseModel):
+    email: EmailStr
+
 # Helper functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
