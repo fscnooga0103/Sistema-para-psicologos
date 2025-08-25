@@ -676,17 +676,7 @@ async def reset_password(reset_data: PasswordResetConfirm):
     
     return {"message": "Password reset successfully"}
 
-# Center endpoints
-@api_router.post("/centers", response_model=Center)
-async def create_center(center: CenterCreate, current_user: User = Depends(require_role([UserRole.SUPER_ADMIN]))):
-    center_obj = Center(**center.dict())
-    await db.centers.insert_one(center_obj.dict())
-    return center_obj
 
-@api_router.get("/centers", response_model=List[Center])
-async def get_centers(current_user: User = Depends(require_role([UserRole.SUPER_ADMIN]))):
-    centers = await db.centers.find().to_list(1000)
-    return [Center(**center) for center in centers]
 
 # Patient endpoints con nueva lógica de permisos
 @api_router.post("/patients", response_model=Patient)
