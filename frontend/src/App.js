@@ -3763,35 +3763,6 @@ const SettingsManagement = () => {
     </div>
   );
 };
-
-const MainApp = () => {
-  const [currentView, setCurrentView] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const renderView = () => {
-    switch (currentView) {
-      case 'patients':
-        return <PatientManagement />;
-      case 'centers':
-        return <CenterManagement />;
-      case 'schedule':
-        return <AppointmentManagement />;
-      case 'sessions':
-        return <SessionManagement />;
-      case 'finances':
-        return <FinanceManagement />;
-      case 'users':
-        return <UserManagement />;
-      case 'psychologists':
-        return <UserManagement />;
-      case 'settings':
-        return <SettingsManagement />;
-      default:
-        return <Dashboard onNavigate={setCurrentView} />;
-    }
-  };
-
-  return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar 
         isOpen={sidebarOpen} 
