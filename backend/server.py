@@ -152,14 +152,17 @@ class Patient(BaseModel):
     gender: Optional[str] = None
     address: Optional[str] = None
     emergency_contact: Optional[Dict[str, str]] = None
-    psychologist_id: str
-    center_id: str
+    psychologist_id: str                         # Psicólogo principal
+    center_id: Optional[str] = None             # Centro asignado (si aplica)
+    patient_type: PatientType = PatientType.INDIVIDUAL  # Tipo: individual o compartido
+    shared_with: List[str] = []                 # IDs de psicólogos con acceso compartido
+    database_context: str                       # Contexto de BD: centro_id o psychologist_id
     clinical_history: Optional[Dict[str, Any]] = None
     evaluations: List[Dict[str, Any]] = []
     diagnosis: Optional[Dict[str, Any]] = None
     progress_notes: List[Dict[str, Any]] = []
-    anamnesis: Optional[Dict[str, Any]] = None  # Nueva ficha de anamnesis
-    notes: Optional[str] = None  # Notas generales del paciente
+    anamnesis: Optional[Dict[str, Any]] = None
+    notes: Optional[str] = None
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
